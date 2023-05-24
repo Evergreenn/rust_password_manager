@@ -1,0 +1,17 @@
+[package]
+name = "plop-tui"
+version = "0.1.2"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+log = "0.4"
+tui = { package = "ratatui"}
+
+# tui-logger = {version = "0.9.1", default-features = false, features = ["ratatui"]}
+
+crossterm = "0.26.1"
+tokio = { version = "1", features = ["full"] }
+
+eyre = "0.6.8"
+tui-logger = { version = "0.9.1", features = ["ratatui", "ratatui-support"], default-features = false }
