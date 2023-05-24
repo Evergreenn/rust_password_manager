@@ -1,7 +1,8 @@
 use log::{debug, error, warn};
+use rusqlite::Connection;
 
 use self::actions::Actions;
-use self::state::AppState;
+use self::state::{AppData, AppState};
 use crate::app::actions::Action;
 use crate::inputs::key::Key;
 use crate::io::IoEvent;
@@ -25,6 +26,8 @@ pub struct App {
     /// State
     is_loading: bool,
     state: AppState,
+    data: AppData,
+    db: Option<Connection>,
 }
 
 impl App {
@@ -32,13 +35,20 @@ impl App {
         let actions = vec![Action::Quit].into();
         let is_loading = false;
         let state = AppState::default();
+        let data = AppData::default();
 
         Self {
             io_tx,
             actions,
             is_loading,
             state,
+            db: None,
+            data,
         }
+    }
+
+    pub fn set_connection(&mut self, db: Connection) {
+        self.db = Some(db);
     }
 
     /// Handle a user action
@@ -48,8 +58,7 @@ impl App {
             match action {
                 Action::Quit => AppReturn::Exit,
                 Action::Help => {
-                    debug!("Help");
-                    // self.state.toggle_help();
+                    self.state.toggle_help();
                     AppReturn::Continue
                 } // Action::Sleep => {
                   //     if let Some(duration) = self.state.duration().cloned() {
@@ -118,9 +127,5 @@ impl App {
 
     pub fn loaded(&mut self) {
         self.is_loading = false;
-    }
-
-    pub fn slept(&mut self) {
-        self.state.incr_sleep();
     }
 }

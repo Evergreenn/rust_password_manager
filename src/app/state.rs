@@ -1,24 +1,39 @@
-use std::time::Duration;
+// use std::time::Duration;
+
+use crate::models::key::Key;
 
 #[derive(Clone)]
 pub enum AppState {
     Init,
     Initialized {
-        duration: Duration,
-        counter_sleep: u32,
+        // duration: Duration,
         counter_tick: u64,
+        show_help: bool,
     },
 }
 
 impl AppState {
     pub fn initialized() -> Self {
-        let duration = Duration::from_secs(1);
-        let counter_sleep = 0;
+        // let duration = Duration::from_secs(1);
         let counter_tick = 0;
         Self::Initialized {
-            duration,
-            counter_sleep,
+            // duration,
             counter_tick,
+            show_help: false,
+        }
+    }
+
+    pub fn toggle_help(&mut self) {
+        if let Self::Initialized { show_help, .. } = self {
+            *show_help = !*show_help;
+        }
+    }
+
+    pub fn is_help(&self) -> bool {
+        if let Self::Initialized { show_help, .. } = self {
+            *show_help
+        } else {
+            false
         }
     }
 
@@ -26,23 +41,9 @@ impl AppState {
         matches!(self, &Self::Initialized { .. })
     }
 
-    pub fn incr_sleep(&mut self) {
-        if let Self::Initialized { counter_sleep, .. } = self {
-            *counter_sleep += 1;
-        }
-    }
-
     pub fn incr_tick(&mut self) {
         if let Self::Initialized { counter_tick, .. } = self {
             *counter_tick += 1;
-        }
-    }
-
-    pub fn count_sleep(&self) -> Option<u32> {
-        if let Self::Initialized { counter_sleep, .. } = self {
-            Some(*counter_sleep)
-        } else {
-            None
         }
     }
 
@@ -53,34 +54,23 @@ impl AppState {
             None
         }
     }
-
-    pub fn duration(&self) -> Option<&Duration> {
-        if let Self::Initialized { duration, .. } = self {
-            Some(duration)
-        } else {
-            None
-        }
-    }
-
-    pub fn increment_delay(&mut self) {
-        if let Self::Initialized { duration, .. } = self {
-            // Set the duration, note that the duration is in 1s..10s
-            let secs = (duration.as_secs() + 1).clamp(1, 10);
-            *duration = Duration::from_secs(secs);
-        }
-    }
-
-    pub fn decrement_delay(&mut self) {
-        if let Self::Initialized { duration, .. } = self {
-            // Set the duration, note that the duration is in 1s..10s
-            let secs = (duration.as_secs() - 1).clamp(1, 10);
-            *duration = Duration::from_secs(secs);
-        }
-    }
 }
 
 impl Default for AppState {
     fn default() -> Self {
         Self::Init
+    }
+}
+
+pub enum AppData {
+    NoData,
+    KeyList { keys: Vec<Key> },
+}
+
+impl AppData {}
+
+impl Default for AppData {
+    fn default() -> Self {
+        Self::NoData
     }
 }
