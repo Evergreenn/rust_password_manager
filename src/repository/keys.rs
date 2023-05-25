@@ -1,6 +1,8 @@
+use log::debug;
+use rusqlite::Error;
+
 use super::init_connection;
 use crate::models::key::Key;
-use rusqlite::Error;
 
 pub fn retrive_keys_from_db() -> Result<Vec<Key>, Error> {
     let co = init_connection()?;
@@ -18,10 +20,9 @@ pub fn retrive_keys_from_db() -> Result<Vec<Key>, Error> {
         })
         .unwrap();
 
-    let mut names = Vec::new();
-    for name_result in rows {
-        names.push(name_result?);
+    let mut keys = Vec::new();
+    for key in rows {
+        keys.push(key?);
     }
-
-    Ok(names)
+    Ok(keys)
 }

@@ -82,12 +82,20 @@ impl AppData {
         matches!(self, &Self::KeyList { .. })
     }
 
-    // pub fn key_list_keys(&self) -> Option<&Vec<Key>> {
-    //     if let Self::KeyList { keys } = self {
-    //         Some(keys)
-    //     } else {
-    //         None
-    //     }
+    pub fn get_key_list(&self) -> Option<Vec<Key>> {
+        if let Self::KeyList { keys } = self {
+            Some(keys.clone())
+        } else {
+            None
+        }
+    }
+
+    // pub fn get_key_list(&self) -> Vec<Key> {
+    //     // if let Self::KeyList { keys } = self {
+    //     self
+    //     // } else {
+    //     // None
+    //     // }
     // }
 }
 
