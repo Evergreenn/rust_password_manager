@@ -1,7 +1,14 @@
 use rusqlite::{Connection, Result};
 
+pub mod keys;
+
 pub fn init_connection() -> Result<Connection> {
     let co = Connection::open("test.db")?;
+    Ok(co)
+}
+
+pub fn init_database_schemas() -> Result<Connection> {
+    let co = init_connection()?;
     init_databases(&co)?;
     Ok(co)
 }

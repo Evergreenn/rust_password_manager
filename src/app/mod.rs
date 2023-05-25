@@ -26,8 +26,8 @@ pub struct App {
     /// State
     is_loading: bool,
     state: AppState,
-    data: AppData,
-    db: Option<Connection>,
+    pub data: AppData,
+    // db: Option<Connection>,
 }
 
 impl App {
@@ -42,14 +42,14 @@ impl App {
             actions,
             is_loading,
             state,
-            db: None,
+            // db: None,
             data,
         }
     }
 
-    pub fn set_connection(&mut self, db: Connection) {
-        self.db = Some(db);
-    }
+    // pub fn set_connection(&mut self, db: Connection) {
+    //     self.db = Some(db);
+    // }
 
     /// Handle a user action
     pub async fn do_action(&mut self, key: Key) -> AppReturn {
