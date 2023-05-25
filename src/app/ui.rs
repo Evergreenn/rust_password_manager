@@ -1,5 +1,6 @@
 // use std::time::Duration;
 
+use log::debug;
 // use symbols::line;
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
@@ -10,7 +11,7 @@ use tui::Frame;
 use tui_logger::TuiLoggerWidget;
 
 use super::actions::Actions;
-use super::state::AppState;
+use super::state::{AppData, AppState};
 use crate::app::App;
 
 pub fn draw<B>(rect: &mut Frame<B>, app: &App)
@@ -46,6 +47,9 @@ where
 
     let body = draw_body(app.is_loading(), app.state());
     rect.render_widget(body, body_chunks[1]);
+
+    let keys = draw_keys(&app.data);
+    rect.render_widget(keys, body_chunks[0]);
 
     // Logs
     let logs = draw_logs();
@@ -133,6 +137,55 @@ fn draw_body<'a>(loading: bool, state: &AppState) -> Paragraph<'a> {
             .style(Style::default().fg(Color::White))
             .border_type(BorderType::Plain),
     )
+}
+
+fn draw_keys(data: &AppData) -> Table {
+    let key_style = Style::default().fg(Color::LightCyan);
+    let value_style = Style::default().fg(Color::Gray);
+
+    match data.get_key_list() {
+        Some(i) => {
+            let mut rows = vec![];
+            for key in i {
+                let row = Row::new(vec![
+                    Cell::from(Span::styled(key.id().to_string(), key_style)),
+                    Cell::from(Span::styled(key.name().to_string(), value_style)),
+                    Cell::from(Span::styled(key.value().to_string(), value_style)),
+                    Cell::from(Span::styled(key.created_at().to_string(), value_style)),
+                    Cell::from(Span::styled(key.updated_at().to_string(), value_style)),
+                ]);
+                rows.push(row);
+            }
+
+            Table::new(rows)
+                .header(
+                    Row::new(vec![
+                        Cell::from(Span::styled("ID", key_style)),
+                        Cell::from(Span::styled("Name", key_style)),
+                        Cell::from(Span::styled("Value", key_style)),
+                        Cell::from(Span::styled("Created At", key_style)),
+                        Cell::from(Span::styled("Updated At", key_style)),
+                    ])
+                    .style(Style::default().fg(Color::Yellow)),
+                )
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .border_type(BorderType::Plain)
+                        .title("Keys"),
+                )
+                .widths(&[
+                    Constraint::Length(10),
+                    Constraint::Min(10),
+                    Constraint::Min(10),
+                    Constraint::Min(10),
+                    Constraint::Min(10),
+                ])
+                // .widths(&[Constraint::Length(11), Constraint::Min(20)])
+                .column_spacing(1)
+        }
+        None => return Table::new(vec![]),
+    }
 }
 
 fn draw_help(actions: &Actions) -> Table {
