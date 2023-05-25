@@ -35,16 +35,16 @@ impl IoAsyncHandler {
     async fn do_initialize(&mut self) -> Result<()> {
         info!("🚀 Initialize the application");
         let mut app = self.app.lock().await;
+
         //TODO: get the database connection
         //TODO: get the configuration
 
-        info!("💾 Create database");
+        info!("💾 Retrieve data");
+        crate::repository::init_database_schemas()?;
+        // app.set_connection(co);
+        app.data.set_key_list();
 
-        let co = crate::repository::init_connection()?;
-
-        app.set_connection(co);
-
-        tokio::time::sleep(Duration::from_secs(1)).await;
+        // tokio::time::sleep(Duration::from_secs(1)).await;
         app.initialized(); // we could update the app state
         info!("🍾 Application initialized");
 

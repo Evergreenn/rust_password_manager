@@ -1,6 +1,7 @@
 // use std::time::Duration;
 
 use crate::models::key::Key;
+use crate::repository::keys::retrive_keys_from_db;
 
 #[derive(Clone)]
 pub enum AppState {
@@ -62,12 +63,33 @@ impl Default for AppState {
     }
 }
 
+// Container for the data we want to display
 pub enum AppData {
     NoData,
     KeyList { keys: Vec<Key> },
 }
 
-impl AppData {}
+impl AppData {
+    pub fn set_key_list(&mut self) {
+        let keys = retrive_keys_from_db().unwrap();
+        *self = Self::KeyList { keys };
+    }
+    // pub fn set_key_list(keys: Vec<Key>) -> Self {
+    //     Self::KeyList { keys }
+    // }
+
+    pub fn is_key_list(&self) -> bool {
+        matches!(self, &Self::KeyList { .. })
+    }
+
+    // pub fn key_list_keys(&self) -> Option<&Vec<Key>> {
+    //     if let Self::KeyList { keys } = self {
+    //         Some(keys)
+    //     } else {
+    //         None
+    //     }
+    // }
+}
 
 impl Default for AppData {
     fn default() -> Self {
