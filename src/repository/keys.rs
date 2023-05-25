@@ -1,4 +1,3 @@
-use log::debug;
 use rusqlite::Error;
 
 use super::init_connection;
