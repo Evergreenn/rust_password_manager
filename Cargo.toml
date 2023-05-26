@@ -1,5 +1,5 @@
 [package]
-name = "plop-tui"
+name = "rust_password_manager"
 version = "0.1.2"
 edition = "2021"
 license = "MIT OR Apache-2.0"

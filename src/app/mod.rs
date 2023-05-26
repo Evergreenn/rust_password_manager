@@ -27,7 +27,6 @@ pub struct App {
     is_loading: bool,
     state: AppState,
     pub data: AppData,
-    // db: Option<Connection>,
 }
 
 impl App {
@@ -42,14 +41,9 @@ impl App {
             actions,
             is_loading,
             state,
-            // db: None,
             data,
         }
     }
-
-    // pub fn set_connection(&mut self, db: Connection) {
-    //     self.db = Some(db);
-    // }
 
     /// Handle a user action
     pub async fn do_action(&mut self, key: Key) -> AppReturn {
@@ -60,7 +54,16 @@ impl App {
                 Action::Help => {
                     self.state.toggle_help();
                     AppReturn::Continue
+                }
+                Action::MoveUp => {
+                    self.data.keys.previous();
+                    AppReturn::Continue
+                }
+                Action::MoveDown => {
+                    self.data.keys.next();
+                    AppReturn::Continue
                 } // Action::Sleep => {
+
                   //     if let Some(duration) = self.state.duration().cloned() {
                   //         // Sleep is an I/O action, we dispatch on the IO channel that's run on another thread
                   //         self.dispatch(IoEvent::Sleep(duration)).await
@@ -75,7 +78,6 @@ impl App {
                   // // Note, that we clamp the duration, so we stay >= 0
                   // Action::DecrementDelay => {
                   //     self.state.decrement_delay();
-                  //     AppReturn::Continue
                   // }
             }
         } else {
@@ -117,6 +119,8 @@ impl App {
         self.actions = vec![
             Action::Quit,
             Action::Help,
+            Action::MoveUp,
+            Action::MoveDown,
             // Action::Sleep,
             // Action::IncrementDelay,
             // Action::DecrementDelay,

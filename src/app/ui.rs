@@ -1,20 +1,26 @@
 // use std::time::Duration;
 
+use std::rc::Rc;
+
 use log::debug;
 // use symbols::line;
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Block, BorderType, Borders, Cell, Clear, Paragraph, Row, Table};
+use tui::style::{Color, Modifier, Style};
+use tui::text::{Span, Spans, Text};
+use tui::widgets::canvas::Line;
+use tui::widgets::{
+    Block, BorderType, Borders, Cell, Clear, List, ListItem, Paragraph, Row, Table,
+};
 use tui::Frame;
 use tui_logger::TuiLoggerWidget;
 
 use super::actions::Actions;
 use super::state::{AppData, AppState};
 use crate::app::App;
+use crate::models::key::Key;
 
-pub fn draw<B>(rect: &mut Frame<B>, app: &App)
+pub fn draw<B>(rect: &mut Frame<B>, app: &mut App)
 where
     B: Backend,
 {
@@ -48,14 +54,16 @@ where
     let body = draw_body(app.is_loading(), app.state());
     rect.render_widget(body, body_chunks[1]);
 
-    let keys = draw_keys(&app.data);
-    rect.render_widget(keys, body_chunks[0]);
+    let keys = draw_keys(&mut app.data, body_chunks[0], rect);
+    // rect.render_stateful_widget(keys, body_chunks[0], &mut app.data.keys.state);
+    // rect.render_widget(keys, body_chunks[0]);
 
     // Logs
     let logs = draw_logs();
     rect.render_widget(logs, chunks[3]);
 
     if app.state.is_help() {
+        debug!("actions: {:?}", app.actions());
         let help = draw_help(app.actions());
         let area = centered_rect(80, 80, size);
         rect.render_widget(Clear, area); //this clears out the background
@@ -139,53 +147,41 @@ fn draw_body<'a>(loading: bool, state: &AppState) -> Paragraph<'a> {
     )
 }
 
-fn draw_keys(data: &AppData) -> Table {
+fn draw_keys<B: Backend>(data: &mut AppData, body_chunk: Rect, rect: &mut Frame<B>) -> () {
+    // debug!("state: {:?}", data.keys.state);
+    // debug!("items: {:?}", data.keys.items);
+
     let key_style = Style::default().fg(Color::LightCyan);
-    let value_style = Style::default().fg(Color::Gray);
+    // let value_style = Style::default().fg(Color::Gray);
 
-    match data.get_key_list() {
-        Some(i) => {
-            let mut rows = vec![];
-            for key in i {
-                let row = Row::new(vec![
-                    Cell::from(Span::styled(key.id().to_string(), key_style)),
-                    Cell::from(Span::styled(key.name().to_string(), value_style)),
-                    Cell::from(Span::styled(key.value().to_string(), value_style)),
-                    Cell::from(Span::styled(key.created_at().to_string(), value_style)),
-                    Cell::from(Span::styled(key.updated_at().to_string(), value_style)),
-                ]);
-                rows.push(row);
-            }
+    let items: Vec<ListItem> = data
+        .keys
+        .items
+        .iter()
+        .map(|i: &Key| {
+            // let mut lines = vec![Line::from(i.name())];
+            //     for _ in 0..i.1 {
+            //         lines.push(Line::from(Span::styled(
+            //             "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+            //             Style::default().add_modifier(Modifier::ITALIC),
+            //         )));
+            //     }
+            ListItem::new(Span::from(i.name())).style(key_style)
+            // .style(Style::default().fg(Color::Black).bg(Color::White))
+        })
+        .collect();
 
-            Table::new(rows)
-                .header(
-                    Row::new(vec![
-                        Cell::from(Span::styled("ID", key_style)),
-                        Cell::from(Span::styled("Name", key_style)),
-                        Cell::from(Span::styled("Value", key_style)),
-                        Cell::from(Span::styled("Created At", key_style)),
-                        Cell::from(Span::styled("Updated At", key_style)),
-                    ])
-                    .style(Style::default().fg(Color::Yellow)),
-                )
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .border_type(BorderType::Plain)
-                        .title("Keys"),
-                )
-                .widths(&[
-                    Constraint::Length(10),
-                    Constraint::Min(10),
-                    Constraint::Min(10),
-                    Constraint::Min(10),
-                    Constraint::Min(10),
-                ])
-                // .widths(&[Constraint::Length(11), Constraint::Min(20)])
-                .column_spacing(1)
-        }
-        None => return Table::new(vec![]),
-    }
+    // Create a List from all list items and highlight the currently selected one
+    let items = List::new(items)
+        .block(Block::default().borders(Borders::ALL).title("List"))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol(">> ");
+
+    rect.render_stateful_widget(items, body_chunk, &mut data.keys.state);
 }
 
 fn draw_help(actions: &Actions) -> Table {

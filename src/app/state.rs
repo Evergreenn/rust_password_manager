@@ -1,5 +1,10 @@
 // use std::time::Duration;
 
+use std::fmt::Display;
+
+use log::debug;
+use tui::widgets::ListState;
+
 use crate::models::key::Key;
 use crate::repository::keys::retrive_keys_from_db;
 
@@ -63,44 +68,114 @@ impl Default for AppState {
     }
 }
 
-// Container for the data we want to display
-pub enum AppData {
-    NoData,
-    KeyList { keys: Vec<Key> },
+pub struct StatefulList<T> {
+    pub state: ListState,
+    pub items: Vec<T>,
 }
 
-impl AppData {
-    pub fn set_key_list(&mut self) {
-        let keys = retrive_keys_from_db().unwrap();
-        *self = Self::KeyList { keys };
-    }
-    // pub fn set_key_list(keys: Vec<Key>) -> Self {
-    //     Self::KeyList { keys }
-    // }
-
-    pub fn is_key_list(&self) -> bool {
-        matches!(self, &Self::KeyList { .. })
-    }
-
-    pub fn get_key_list(&self) -> Option<Vec<Key>> {
-        if let Self::KeyList { keys } = self {
-            Some(keys.clone())
-        } else {
-            None
+impl<T> StatefulList<T> {
+    pub fn with_items(items: Vec<T>) -> StatefulList<T> {
+        StatefulList {
+            state: ListState::default(),
+            items,
         }
     }
 
-    // pub fn get_key_list(&self) -> Vec<Key> {
-    //     // if let Self::KeyList { keys } = self {
-    //     self
-    //     // } else {
-    //     // None
-    //     // }
-    // }
+    pub fn next(&mut self) {
+        let i = match self.state.selected() {
+            Some(i) => {
+                if i >= self.items.len() - 1 {
+                    0
+                } else {
+                    i + 1
+                }
+            }
+            None => 0,
+        };
+        self.state.select(Some(i));
+    }
+
+    pub fn previous(&mut self) {
+        let i = match self.state.selected() {
+            Some(i) => {
+                if i == 0 {
+                    self.items.len() - 1
+                } else {
+                    i - 1
+                }
+            }
+            None => 0,
+        };
+        self.state.select(Some(i));
+    }
+
+    pub fn unselect(&mut self) {
+        self.state.select(None);
+    }
+}
+
+pub struct AppData {
+    pub keys: StatefulList<Key>,
+}
+
+impl AppData {
+    pub fn load_key_list(&mut self) -> () {
+        let keys = retrive_keys_from_db().unwrap();
+        debug!("keys: {:?}", keys);
+        self.keys = StatefulList::with_items(keys);
+    }
+}
+
+impl Display for AppData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut keys = String::new();
+        for key in &self.keys.items {
+            keys.push_str(&format!("{}\n", key.name()));
+        }
+        write!(f, "{}", keys)
+    }
 }
 
 impl Default for AppData {
     fn default() -> Self {
-        Self::NoData
+        Self {
+            keys: StatefulList::with_items(Vec::new()),
+        }
     }
 }
+
+// Container for the data we want to display
+// pub enum AppData {
+//     NoData,
+//     KeyList: StatefulList<Key>,
+// }
+
+// impl AppData {
+//     pub fn set_key_list(&mut self) {
+//         let keys = retrive_keys_from_db().unwrap();
+//         *self = Self::KeyList { keys };
+//     }
+//     // pub fn set_key_list(keys: Vec<Key>) -> Self {
+//     //     Self::KeyList { keys }
+//     // }
+
+//     pub fn is_key_list(&self) -> bool {
+//         matches!(self, &Self::KeyList { .. })
+//     }
+
+//     pub fn get_key_list(&self) -> Option<Vec<Key>> {
+//         if let Self::KeyList { keys } = self {
+//             Some(keys.clone())
+//         } else {
+//             None
+//         }
+//     }
+
+//     // pub fn get_key_list(&self) -> Vec<Key> {
+//     //     // if let Self::KeyList { keys } = self {
+//     //     self
+//     //     // } else {
+//     //     // None
+//     //     // }
+//     // }
+// }

@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use eyre::Result;
 use log::LevelFilter;
-use plop_tui::app::App;
-use plop_tui::io::handler::IoAsyncHandler;
-use plop_tui::io::IoEvent;
-use plop_tui::start_ui;
+use rust_password_manager::app::App;
+use rust_password_manager::io::handler::IoAsyncHandler;
+use rust_password_manager::io::IoEvent;
+use rust_password_manager::start_ui;
 
 #[tokio::main]
 async fn main() -> Result<()> {
