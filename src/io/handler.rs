@@ -42,7 +42,7 @@ impl IoAsyncHandler {
         info!("💾 Retrieve data");
         crate::repository::init_database_schemas()?;
         // app.set_connection(co);
-        app.data.set_key_list();
+        app.data.load_key_list();
 
         // tokio::time::sleep(Duration::from_secs(1)).await;
         app.initialized(); // we could update the app state
