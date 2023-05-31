@@ -1,14 +1,8 @@
-// use std::time::Duration;
-
-use std::rc::Rc;
-
 use log::debug;
-// use symbols::line;
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans, Text};
-use tui::widgets::canvas::Line;
+use tui::text::{Span, Spans};
 use tui::widgets::{
     Block, BorderType, Borders, Cell, Clear, List, ListItem, Paragraph, Row, Table,
 };
@@ -51,10 +45,10 @@ where
         .constraints([Constraint::Percentage(20), Constraint::Percentage(80)].as_ref())
         .split(chunks[1]);
 
-    let body = draw_body(app.is_loading(), app.state());
+    let body = draw_body(app.is_loading(), app.state(), &app.data);
     rect.render_widget(body, body_chunks[1]);
 
-    let keys = draw_keys(&mut app.data, body_chunks[0], rect);
+    draw_keys(&mut app.data, body_chunks[0], rect);
     // rect.render_stateful_widget(keys, body_chunks[0], &mut app.data.keys.state);
     // rect.render_widget(keys, body_chunks[0]);
 
@@ -69,6 +63,13 @@ where
         rect.render_widget(Clear, area); //this clears out the background
         rect.render_widget(help, area);
     }
+
+    // if app.state.is_creation_popup() {
+    //     let popup = draw_creation_form();
+    //     let area = centered_rect(80, 80, size);
+    //     rect.render_widget(Clear, area); //this clears out the background
+    //     rect.render_widget(popup, area);
+    // }
 }
 
 /// helper function to create a centered rect using up certain percentage of the available rect `r`
@@ -119,32 +120,75 @@ fn check_size(rect: &Rect) {
     }
 }
 
-fn draw_body<'a>(loading: bool, state: &AppState) -> Paragraph<'a> {
-    let initialized_text = if state.is_initialized() {
-        "Initialized"
-    } else {
-        "Not Initialized !"
-    };
-    let loading_text = if loading { "Loading..." } else { "" };
+fn draw_body<'a>(_loading: bool, state: &AppState, data: &'a AppData) -> Paragraph<'a> {
+    // let initialized_text = if state.is_initialized() {
+    //     "Initialized"
+    // } else {
+    //     "Not Initialized !"
+    // };
+    // let loading_text = if loading { "Loading..." } else { "" };
     let tick_text = if let Some(ticks) = state.count_tick() {
         format!("Tick count: {}", ticks)
     } else {
         String::default()
     };
-    Paragraph::new(vec![
-        Spans::from(Span::raw(initialized_text)),
-        Spans::from(Span::raw(loading_text)),
-        Spans::from(Span::raw(tick_text)),
-    ])
-    .style(Style::default().fg(Color::LightCyan))
-    .alignment(Alignment::Left)
-    .block(
-        Block::default()
-            // .title("Body")
-            .borders(Borders::ALL)
-            .style(Style::default().fg(Color::White))
-            .border_type(BorderType::Plain),
-    )
+
+    let selected_key = data.keys.state.selected();
+    match selected_key {
+        Some(idx) => {
+            data.keys
+                .items
+                .get(idx)
+                .map(|key| {
+                    // key.value().to_owned()
+
+                    Paragraph::new(vec![
+                        Spans::from(Span::raw(key.name().to_string())),
+                        Spans::from(Span::raw(key.value())),
+                        Spans::from(Span::raw(key.created_at())),
+                        Spans::from(Span::raw(key.updated_at())),
+                        Spans::from(Span::raw(tick_text)),
+                        // Spans::from(Span::raw(format!("Selected: {:?}", selected))),
+                    ])
+                    .style(Style::default().fg(Color::LightCyan))
+                    .alignment(Alignment::Left)
+                    .block(
+                        Block::default()
+                            .title("Body")
+                            .borders(Borders::ALL)
+                            .style(Style::default().fg(Color::White))
+                            .border_type(BorderType::Plain),
+                    )
+                })
+                .unwrap_or_else(|| Paragraph::new(vec![Spans::from(Span::raw(""))]))
+            // debug!("selected_key: {:?}", e);
+        }
+        None => {
+            // debug!("selected_key: None");
+            Paragraph::new(vec![
+                Spans::from(Span::raw("")),
+                // Spans::from(Span::raw(loading_text)),
+                Spans::from(Span::raw(tick_text)),
+                // Spans::from(Span::raw(format!("Selected: {:?}", selected))),
+            ])
+            .style(Style::default().fg(Color::LightCyan))
+            .alignment(Alignment::Left)
+            .block(
+                Block::default()
+                    .title("Body")
+                    .borders(Borders::ALL)
+                    .style(Style::default().fg(Color::White))
+                    .border_type(BorderType::Plain),
+            )
+        }
+    }
+
+    // Paragraph::new(vec![
+    //     Spans::from(Span::raw(initialized_text)),
+    //     Spans::from(Span::raw(loading_text)),
+    //     Spans::from(Span::raw(tick_text)),
+    //     Spans::from(Span::raw(format!("Selected: {:?}", selected))),
+    // ])
 }
 
 fn draw_keys<B: Backend>(data: &mut AppData, body_chunk: Rect, rect: &mut Frame<B>) -> () {
@@ -176,13 +220,17 @@ fn draw_keys<B: Backend>(data: &mut AppData, body_chunk: Rect, rect: &mut Frame<
         .block(Block::default().borders(Borders::ALL).title("List"))
         .highlight_style(
             Style::default()
-                .bg(Color::LightGreen)
+                .bg(Color::Gray)
                 .add_modifier(Modifier::BOLD),
-        )
-        .highlight_symbol(">> ");
+        );
+    // .highlight_symbol(">> ");
 
     rect.render_stateful_widget(items, body_chunk, &mut data.keys.state);
 }
+
+// fn draw_creation_form() {
+
+// }
 
 fn draw_help(actions: &Actions) -> Table {
     let key_style = Style::default().fg(Color::LightCyan);

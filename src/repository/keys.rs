@@ -25,3 +25,13 @@ pub fn retrive_keys_from_db() -> Result<Vec<Key>, Error> {
     }
     Ok(keys)
 }
+
+pub fn insert_key_to_db(key: &Key) -> Result<(), Error> {
+    let co = init_connection()?;
+
+    co.execute(
+        "INSERT INTO keys (name, value) VALUES (?1, ?2)",
+        &[&key.name(), &key.value()],
+    )?;
+    Ok(())
+}

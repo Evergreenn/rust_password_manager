@@ -2,11 +2,10 @@
 
 use std::fmt::Display;
 
-use log::debug;
 use tui::widgets::ListState;
 
 use crate::models::key::Key;
-use crate::repository::keys::retrive_keys_from_db;
+use crate::repository::keys::{insert_key_to_db, retrive_keys_from_db};
 
 #[derive(Clone)]
 pub enum AppState {
@@ -15,6 +14,7 @@ pub enum AppState {
         // duration: Duration,
         counter_tick: u64,
         show_help: bool,
+        show_creation_popup: bool,
     },
 }
 
@@ -26,12 +26,35 @@ impl AppState {
             // duration,
             counter_tick,
             show_help: false,
+            show_creation_popup: false,
         }
     }
 
     pub fn toggle_help(&mut self) {
         if let Self::Initialized { show_help, .. } = self {
             *show_help = !*show_help;
+        }
+    }
+
+    pub fn toggle_creation_popup(&mut self) {
+        if let Self::Initialized {
+            show_creation_popup,
+            ..
+        } = self
+        {
+            *show_creation_popup = !*show_creation_popup;
+        }
+    }
+
+    pub fn is_creation_popup(&self) -> bool {
+        if let Self::Initialized {
+            show_creation_popup,
+            ..
+        } = self
+        {
+            *show_creation_popup
+        } else {
+            false
         }
     }
 
@@ -63,7 +86,7 @@ impl AppState {
 }
 
 impl Default for AppState {
-    fn default() -> Self {
+    fn default() -> AppState {
         Self::Init
     }
 }
@@ -121,8 +144,12 @@ pub struct AppData {
 impl AppData {
     pub fn load_key_list(&mut self) -> () {
         let keys = retrive_keys_from_db().unwrap();
-        debug!("keys: {:?}", keys);
         self.keys = StatefulList::with_items(keys);
+    }
+
+    pub fn create_key(&mut self, key: Key) -> () {
+        insert_key_to_db(&key).unwrap();
+        self.keys.items.push(key);
     }
 }
 
