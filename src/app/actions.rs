@@ -11,13 +11,25 @@ pub enum Action {
     Help,
     MoveUp,
     MoveDown,
+    CreateKey,
+    RemoveChar,
+    // WriteChar(char),
+    Validate,
 }
 
 impl Action {
     /// All available actions
     pub fn iterator() -> Iter<'static, Action> {
-        static ACTIONS: [Action; 4] =
-            [Action::Quit, Action::Help, Action::MoveUp, Action::MoveDown];
+        static ACTIONS: [Action; 7] = [
+            Action::Quit,
+            Action::Help,
+            Action::MoveUp,
+            Action::MoveDown,
+            Action::CreateKey,
+            Action::RemoveChar,
+            // Action::WriteChar('a'),
+            Action::Validate,
+        ];
         ACTIONS.iter()
     }
 
@@ -27,7 +39,12 @@ impl Action {
             Action::Quit => &[Key::Ctrl('c'), Key::Char('q')],
             Action::MoveUp => &[Key::Char('k')],
             Action::MoveDown => &[Key::Char('j')],
+            Action::CreateKey => &[Key::Char('c')],
             Action::Help => &[Key::Char('?')],
+            Action::RemoveChar => &[Key::Backspace],
+            Action::Validate => &[Key::Enter],
+            // Action::WriteChar("a") => &[Key::Unknown],
+            // _ => &[Key::Char(_)],
         }
     }
 }
@@ -40,6 +57,8 @@ impl Display for Action {
             Action::Help => "Help",
             Action::MoveUp => "Move up",
             Action::MoveDown => "Move down",
+            Action::CreateKey => "Create a new key",
+            _ => "",
         };
         write!(f, "{}", str)
     }
