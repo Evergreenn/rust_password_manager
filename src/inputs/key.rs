@@ -39,6 +39,7 @@ pub enum Key {
     Ctrl(char),
     Alt(char),
     Unknown,
+    Null,
 }
 
 impl Key {
@@ -71,6 +72,10 @@ impl Key {
             12 => Key::F12,
             _ => panic!("unknown function key: F{}", n),
         }
+    }
+    pub fn to_char(&self) -> char {
+        let char_vec: Vec<char> = self.to_string().chars().collect();
+        char_vec[1]
     }
 }
 
@@ -169,7 +174,7 @@ impl From<event::KeyEvent> for Key {
                 ..
             } => Key::Char(c),
 
-            _ => Key::Unknown,
+            _ => Key::Null,
         }
     }
 }
