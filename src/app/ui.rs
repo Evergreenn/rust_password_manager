@@ -57,7 +57,7 @@ where
     rect.render_widget(logs, chunks[3]);
 
     if app.state.is_help() {
-        debug!("actions: {:?}", app.actions());
+        // debug!("actions: {:?}", app.actions());
         let help = draw_help(app.actions());
         let area = centered_rect(80, 80, size);
         rect.render_widget(Clear, area); //this clears out the background
@@ -65,10 +65,11 @@ where
     }
 
     // if app.state.is_creation_popup() {
-    //     let popup = draw_creation_form();
+    //     let help = draw_help(app.actions());
+    //     // let popup = draw_creation_form();
     //     let area = centered_rect(80, 80, size);
     //     rect.render_widget(Clear, area); //this clears out the background
-    //     rect.render_widget(popup, area);
+    //     rect.render_widget(help, area);
     // }
 }
 

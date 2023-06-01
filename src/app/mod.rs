@@ -16,6 +16,7 @@ pub enum AppReturn {
     Continue,
 }
 
+#[derive(Debug, PartialEq, Eq)]
 enum InputMode {
     Normal,
     Editing,
@@ -57,41 +58,79 @@ impl App {
 
     /// Handle a user action
     pub async fn do_action(&mut self, key: Key) -> AppReturn {
-        if let Some(action) = self.actions.find(key) {
-            debug!("Run action [{:?}]", action);
-            match self.input_mode {
-                InputMode::Normal => self.do_normal_action(*action).await,
-                InputMode::Editing => self.do_editing_action(*action).await,
-            }
-        } else {
-            warn!("No action accociated to {}", key);
-            AppReturn::Continue
+        // if self.input_mode == InputMode::Editing {
+        //     return self.do_editing_action(Action::WriteChar, key).await;
+        // }
+
+        match self.input_mode {
+            InputMode::Normal => match self.actions.find(key) {
+                Some(action) => self.do_normal_action(*action, key).await,
+                None => {
+                    warn!("No action accociated to {}", key);
+                    AppReturn::Continue
+                }
+            },
+            InputMode::Editing => match self.actions.find(key) {
+                Some(action) => self.do_editing_action(*action, key).await,
+                None => self.do_editing_action(Action::WriteChar, key).await,
+            }, //             self.do_normal_action(*action, key).await,
+               //
+               //         }
+               //                 InputMode::Editing => self.do_editing_action(*action, key).await,
+               //             }
+
+               //     match self.actions.find(key) {
+               //         Some(action) => {
+               //             // let action = self.actions.find(key);
+               //             match self.input_mode {
+               //                 InputMode::Normal => self.do_normal_action(*action, key).await,
+               //                 InputMode::Editing => self.do_editing_action(*action, key).await,
+               //             }
+               //         }
+               //         None => {
+               //                 warn!("No action accociated to {}", key);
+               //                 // AppReturn::Continue
+               //                 if self.input_mode == InputMode::Editing {
+               //                     self.do_editing_action(Action::WriteChar, key).await
+               //                 } else {
+               //                     AppReturn::Continue
+               //                 }
+               //             }
+               //     }
         }
     }
 
     /// Handle a user action in editing mode
-    async fn do_editing_action(&mut self, action: Action) -> AppReturn {
+    async fn do_editing_action(&mut self, action: Action, key: Key) -> AppReturn {
+        debug!("Editing action: {:?}", action);
+
         match action {
+            Action::Quit => AppReturn::Exit,
             Action::RemoveChar => {
                 self.input_buffer.pop();
                 AppReturn::Continue
             }
-            // Action::WriteChar(c) => {
-            //     self.input_buffer.push(c);
-            //     AppReturn::Continue
-            // }
             Action::Validate => {
                 self.toggle_input_mode();
                 self.state.toggle_creation_popup();
                 // self.data.create_key(/* key */);
                 AppReturn::Continue
             }
-            _ => AppReturn::Continue,
+            Action::WriteChar => {
+                debug!("Write char: {}", key);
+                self.input_buffer.push(key.to_char());
+                debug!("Input buffer: {}", self.input_buffer);
+                return AppReturn::Continue;
+            }
+            _ => {
+                warn!("No action accociated to {}", key);
+                AppReturn::Continue
+            }
         }
     }
 
     /// Handle a user action in normal mode
-    async fn do_normal_action(&mut self, action: Action) -> AppReturn {
+    async fn do_normal_action(&mut self, action: Action, key: Key) -> AppReturn {
         match action {
             Action::Quit => AppReturn::Exit,
             Action::Help => {
@@ -112,24 +151,26 @@ impl App {
                 // self.data.create_key(/* key */);
                 AppReturn::Continue
             }
-            _ => AppReturn::Continue,
-            // Action::Sleep => {
+            _ => {
+                warn!("No action accociated to {}", key);
+                AppReturn::Continue
+            } // Action::Sleep => {
 
-            //     if let Some(duration) = self.state.duration().cloned() {
-            //         // Sleep is an I/O action, we dispatch on the IO channel that's run on another thread
-            //         self.dispatch(IoEvent::Sleep(duration)).await
-            //     }
-            //     AppReturn::Continue
-            // }
-            // IncrementDelay and DecrementDelay is handled in the UI thread
-            // Action::IncrementDelay => {
-            //     self.state.increment_delay();
-            //     AppReturn::Continue
-            // }
-            // // Note, that we clamp the duration, so we stay >= 0
-            // Action::DecrementDelay => {
-            //     self.state.decrement_delay();
-            // }
+              //     if let Some(duration) = self.state.duration().cloned() {
+              //         // Sleep is an I/O action, we dispatch on the IO channel that's run on another thread
+              //         self.dispatch(IoEvent::Sleep(duration)).await
+              //     }
+              //     AppReturn::Continue
+              // }
+              // IncrementDelay and DecrementDelay is handled in the UI thread
+              // Action::IncrementDelay => {
+              //     self.state.increment_delay();
+              //     AppReturn::Continue
+              // }
+              // // Note, that we clamp the duration, so we stay >= 0
+              // Action::DecrementDelay => {
+              //     self.state.decrement_delay();
+              // }
         }
     }
 
