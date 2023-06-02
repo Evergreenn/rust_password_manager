@@ -2,7 +2,7 @@
 
 use std::fmt::Display;
 
-use tui::widgets::ListState;
+use ratatui::widgets::ListState;
 
 use crate::models::key::Key;
 use crate::repository::keys::{insert_key_to_db, retrive_keys_from_db};

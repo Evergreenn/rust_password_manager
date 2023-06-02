@@ -1,8 +1,10 @@
 use log::{debug, error, warn};
 
-use self::actions::Actions;
+use self::actions::actions::Actions;
+use self::actions::editing_actions::EditingActions;
 use self::state::{AppData, AppState};
-use crate::app::actions::Action;
+use crate::app::actions::actions::Action;
+use crate::app::actions::editing_actions::EditingAction;
 use crate::inputs::key::Key;
 use crate::io::IoEvent;
 
@@ -26,8 +28,9 @@ enum InputMode {
 pub struct App {
     /// We could dispatch an IO event
     io_tx: tokio::sync::mpsc::Sender<IoEvent>,
-    /// Contextual actions
+    /// Contextual EditingActions
     actions: Actions,
+    editing_actions: EditingActions,
     /// State
     is_loading: bool,
     state: AppState,
@@ -39,6 +42,7 @@ pub struct App {
 impl App {
     pub fn new(io_tx: tokio::sync::mpsc::Sender<IoEvent>) -> Self {
         let actions = vec![Action::Quit].into();
+        let editing_actions = vec![EditingAction::Quit].into();
         let is_loading = false;
         let state = AppState::default();
         let data = AppData::default();
@@ -48,6 +52,7 @@ impl App {
         Self {
             io_tx,
             actions,
+            editing_actions,
             is_loading,
             state,
             data,
@@ -58,10 +63,6 @@ impl App {
 
     /// Handle a user action
     pub async fn do_action(&mut self, key: Key) -> AppReturn {
-        // if self.input_mode == InputMode::Editing {
-        //     return self.do_editing_action(Action::WriteChar, key).await;
-        // }
-
         match self.input_mode {
             InputMode::Normal => match self.actions.find(key) {
                 Some(action) => self.do_normal_action(*action, key).await,
@@ -70,53 +71,37 @@ impl App {
                     AppReturn::Continue
                 }
             },
-            InputMode::Editing => match self.actions.find(key) {
+            InputMode::Editing => match self.editing_actions.find(key) {
                 Some(action) => self.do_editing_action(*action, key).await,
-                None => self.do_editing_action(Action::WriteChar, key).await,
-            }, //             self.do_normal_action(*action, key).await,
-               //
-               //         }
-               //                 InputMode::Editing => self.do_editing_action(*action, key).await,
-               //             }
-
-               //     match self.actions.find(key) {
-               //         Some(action) => {
-               //             // let action = self.actions.find(key);
-               //             match self.input_mode {
-               //                 InputMode::Normal => self.do_normal_action(*action, key).await,
-               //                 InputMode::Editing => self.do_editing_action(*action, key).await,
-               //             }
-               //         }
-               //         None => {
-               //                 warn!("No action accociated to {}", key);
-               //                 // AppReturn::Continue
-               //                 if self.input_mode == InputMode::Editing {
-               //                     self.do_editing_action(Action::WriteChar, key).await
-               //                 } else {
-               //                     AppReturn::Continue
-               //                 }
-               //             }
-               //     }
+                None => self.do_editing_action(EditingAction::WriteChar, key).await,
+            },
         }
     }
 
     /// Handle a user action in editing mode
-    async fn do_editing_action(&mut self, action: Action, key: Key) -> AppReturn {
-        debug!("Editing action: {:?}", action);
+    async fn do_editing_action(&mut self, action: EditingAction, key: Key) -> AppReturn {
+        debug!("Editing action: {:?} for key: {:?}", action, key);
 
         match action {
-            Action::Quit => AppReturn::Exit,
-            Action::RemoveChar => {
+            EditingAction::Quit => AppReturn::Exit,
+            EditingAction::RemoveChar => {
                 self.input_buffer.pop();
                 AppReturn::Continue
             }
-            Action::Validate => {
+            EditingAction::Dismiss => {
                 self.toggle_input_mode();
                 self.state.toggle_creation_popup();
+                self.input_buffer.clear();
+                AppReturn::Continue
+            }
+            EditingAction::Validate => {
+                self.toggle_input_mode();
+                self.state.toggle_creation_popup();
+                self.input_buffer.clear();
                 // self.data.create_key(/* key */);
                 AppReturn::Continue
             }
-            Action::WriteChar => {
+            EditingAction::WriteChar => {
                 debug!("Write char: {}", key);
                 self.input_buffer.push(key.to_char());
                 debug!("Input buffer: {}", self.input_buffer);
@@ -213,6 +198,14 @@ impl App {
             // Action::Sleep,
             // Action::IncrementDelay,
             // Action::DecrementDelay,
+        ]
+        .into();
+        self.editing_actions = vec![
+            EditingAction::Quit,
+            EditingAction::Validate,
+            EditingAction::RemoveChar,
+            EditingAction::WriteChar,
+            EditingAction::Dismiss,
         ]
         .into();
         self.state = AppState::initialized()

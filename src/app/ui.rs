@@ -1,16 +1,20 @@
-use log::debug;
-use tui::backend::Backend;
-use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{
+// use log::debug;
+// #[cfg(feature = "ratatui-support")]
+use ratatui::backend::Backend;
+use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::{Line, Span, Text};
+// use ratatui::widgets::canvas::Line;
+// use tui::widgets::canvas::Line;
+use ratatui::widgets::{
     Block, BorderType, Borders, Cell, Clear, List, ListItem, Paragraph, Row, Table,
 };
-use tui::Frame;
+use ratatui::Frame;
 use tui_logger::TuiLoggerWidget;
 
-use super::actions::Actions;
+use super::actions::actions::Actions;
 use super::state::{AppData, AppState};
+// use super::InputMode;
 use crate::app::App;
 use crate::models::key::Key;
 
@@ -57,20 +61,40 @@ where
     rect.render_widget(logs, chunks[3]);
 
     if app.state.is_help() {
-        // debug!("actions: {:?}", app.actions());
+        // debug!("EditingActions: {:?}", app.EditingActions());
         let help = draw_help(app.actions());
         let area = centered_rect(80, 80, size);
         rect.render_widget(Clear, area); //this clears out the background
         rect.render_widget(help, area);
     }
 
-    // if app.state.is_creation_popup() {
-    //     let help = draw_help(app.actions());
-    //     // let popup = draw_creation_form();
-    //     let area = centered_rect(80, 80, size);
-    //     rect.render_widget(Clear, area); //this clears out the background
-    //     rect.render_widget(help, area);
-    // }
+    if app.state.is_creation_popup() {
+        let input = draw_creation_form(&app);
+        let area = centered_rect(60, 5, size);
+        rect.render_widget(Clear, area); //this clears out the background
+        rect.render_widget(input, area);
+
+        let helper = draw_creation_helper();
+        let t = Rect::new(0, 0, 60, 10);
+        rect.render_widget(Clear, t); //this clears out the background
+        rect.render_widget(helper, t);
+
+        rect.set_cursor(area.x + app.input_buffer.len() as u16 + 1, area.y + 1)
+    }
+}
+
+fn draw_creation_helper() -> Paragraph<'static> {
+    let text = vec![
+        Line::from(Span::raw("Press 'Enter' to validate")),
+        Line::from(Span::raw("Press 'Esc' to cancel")),
+    ];
+    let paragraph = Paragraph::new(text)
+        .block(Block::default().borders(Borders::ALL).title("Helper"))
+        .style(Style::default().fg(Color::White))
+        .alignment(Alignment::Left)
+        // .wrap(Wrap);
+    ;
+    paragraph
 }
 
 /// helper function to create a centered rect using up certain percentage of the available rect `r`
@@ -144,11 +168,11 @@ fn draw_body<'a>(_loading: bool, state: &AppState, data: &'a AppData) -> Paragra
                     // key.value().to_owned()
 
                     Paragraph::new(vec![
-                        Spans::from(Span::raw(key.name().to_string())),
-                        Spans::from(Span::raw(key.value())),
-                        Spans::from(Span::raw(key.created_at())),
-                        Spans::from(Span::raw(key.updated_at())),
-                        Spans::from(Span::raw(tick_text)),
+                        Line::from(Span::raw(key.name().to_string())),
+                        Line::from(Span::raw(key.value())),
+                        Line::from(Span::raw(key.created_at())),
+                        Line::from(Span::raw(key.updated_at())),
+                        Line::from(Span::raw(tick_text)),
                         // Spans::from(Span::raw(format!("Selected: {:?}", selected))),
                     ])
                     .style(Style::default().fg(Color::LightCyan))
@@ -161,15 +185,15 @@ fn draw_body<'a>(_loading: bool, state: &AppState, data: &'a AppData) -> Paragra
                             .border_type(BorderType::Plain),
                     )
                 })
-                .unwrap_or_else(|| Paragraph::new(vec![Spans::from(Span::raw(""))]))
+                .unwrap_or_else(|| Paragraph::new(vec![Line::from(Span::raw(""))]))
             // debug!("selected_key: {:?}", e);
         }
         None => {
             // debug!("selected_key: None");
             Paragraph::new(vec![
-                Spans::from(Span::raw("")),
+                Line::from(Span::raw("")),
                 // Spans::from(Span::raw(loading_text)),
-                Spans::from(Span::raw(tick_text)),
+                Line::from(Span::raw(tick_text)),
                 // Spans::from(Span::raw(format!("Selected: {:?}", selected))),
             ])
             .style(Style::default().fg(Color::LightCyan))
@@ -229,8 +253,24 @@ fn draw_keys<B: Backend>(data: &mut AppData, body_chunk: Rect, rect: &mut Frame<
     rect.render_stateful_widget(items, body_chunk, &mut data.keys.state);
 }
 
-// fn draw_creation_form() {
+// fn draw_keys<B: Backend>(data: &mut AppData, body_chunk: Rect, rect: &mut Frame<B>) -> () {
+fn draw_creation_form<'a>(app: &'a App) -> Paragraph<'a> {
+    Paragraph::new(app.input_buffer.as_str())
+        .style(Style::default().fg(Color::LightCyan))
+        .alignment(Alignment::Left)
+        .block(
+            Block::default()
+                .title("Register a new Key")
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::White))
+                .border_type(BorderType::Plain),
+        )
+}
 
+// fn draw_footer() -> Paragraph<'static> {
+//     Paragraph::new("Press q to exit, h for help")
+//         .style(Style::default().fg(Color::LightCyan))
+//         .alignment(Alignment::Center)
 // }
 
 fn draw_help(actions: &Actions) -> Table {
