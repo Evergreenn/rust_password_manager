@@ -74,8 +74,10 @@ impl Key {
         }
     }
     pub fn to_char(&self) -> char {
-        let char_vec: Vec<char> = self.to_string().chars().collect();
-        char_vec[1]
+        match self {
+            Key::Char(c) => *c,
+            _ => ' ',
+        }
     }
 }
 
