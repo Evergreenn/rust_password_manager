@@ -1,11 +1,7 @@
-// use log::debug;
-// #[cfg(feature = "ratatui-support")]
 use ratatui::backend::Backend;
 use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
-use ratatui::text::{Line, Span, Text};
-// use ratatui::widgets::canvas::Line;
-// use tui::widgets::canvas::Line;
+use ratatui::text::{Line, Span};
 use ratatui::widgets::{
     Block, BorderType, Borders, Cell, Clear, List, ListItem, Paragraph, Row, Table,
 };
@@ -14,7 +10,6 @@ use tui_logger::TuiLoggerWidget;
 
 use super::actions::actions::Actions;
 use super::state::{AppData, AppState};
-// use super::InputMode;
 use crate::app::App;
 use crate::models::key::Key;
 
@@ -53,15 +48,12 @@ where
     rect.render_widget(body, body_chunks[1]);
 
     draw_keys(&mut app.data, body_chunks[0], rect);
-    // rect.render_stateful_widget(keys, body_chunks[0], &mut app.data.keys.state);
-    // rect.render_widget(keys, body_chunks[0]);
 
     // Logs
     let logs = draw_logs();
     rect.render_widget(logs, chunks[3]);
 
     if app.state.is_help() {
-        // debug!("EditingActions: {:?}", app.EditingActions());
         let help = draw_help(app.actions());
         let area = centered_rect(80, 80, size);
         rect.render_widget(Clear, area); //this clears out the background
@@ -70,7 +62,7 @@ where
 
     if app.state.is_creation_popup() {
         let input = draw_creation_form(&app);
-        let area = centered_rect(60, 5, size);
+        let area = centered_rect(60, 7, size);
         rect.render_widget(Clear, area); //this clears out the background
         rect.render_widget(input, area);
 
@@ -79,7 +71,7 @@ where
         rect.render_widget(Clear, t); //this clears out the background
         rect.render_widget(helper, t);
 
-        rect.set_cursor(area.x + app.input_buffer.len() as u16 + 1, area.y + 1)
+        rect.set_cursor(area.x + app.input_buffer.len() as u16 + 1, area.y + 2)
     }
 }
 
@@ -125,7 +117,7 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 }
 
 fn draw_title<'a>() -> Paragraph<'a> {
-    Paragraph::new("Plop with TUI")
+    Paragraph::new("🔑 Key Manager")
         .style(Style::default().fg(Color::LightCyan))
         .alignment(Alignment::Center)
         .block(
@@ -217,11 +209,7 @@ fn draw_body<'a>(_loading: bool, state: &AppState, data: &'a AppData) -> Paragra
 }
 
 fn draw_keys<B: Backend>(data: &mut AppData, body_chunk: Rect, rect: &mut Frame<B>) -> () {
-    // debug!("state: {:?}", data.keys.state);
-    // debug!("items: {:?}", data.keys.items);
-
     let key_style = Style::default().fg(Color::LightCyan);
-    // let value_style = Style::default().fg(Color::Gray);
 
     let items: Vec<ListItem> = data
         .keys
@@ -253,9 +241,16 @@ fn draw_keys<B: Backend>(data: &mut AppData, body_chunk: Rect, rect: &mut Frame<
     rect.render_stateful_widget(items, body_chunk, &mut data.keys.state);
 }
 
-// fn draw_keys<B: Backend>(data: &mut AppData, body_chunk: Rect, rect: &mut Frame<B>) -> () {
 fn draw_creation_form<'a>(app: &'a App) -> Paragraph<'a> {
-    Paragraph::new(app.input_buffer.as_str())
+    let text = vec![
+        Line::from(Span::styled(
+            "Key Name: ",
+            Style::default().fg(Color::White),
+        )),
+        Line::from(Span::raw(app.input_buffer.as_str())),
+    ];
+
+    Paragraph::new(text)
         .style(Style::default().fg(Color::LightCyan))
         .alignment(Alignment::Left)
         .block(
