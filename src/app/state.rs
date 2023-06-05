@@ -5,7 +5,7 @@ use std::fmt::Display;
 use ratatui::widgets::ListState;
 
 use crate::models::key::Key;
-use crate::repository::keys::{insert_key_to_db, retrive_keys_from_db};
+// use crate::repository::keys::{insert_key_to_db, retrive_keys_from_db};
 
 #[derive(Clone)]
 pub enum AppState {
@@ -143,12 +143,14 @@ pub struct AppData {
 
 impl AppData {
     pub fn load_key_list(&mut self) -> () {
-        let keys = retrive_keys_from_db().unwrap();
+        let keys = Key::retrive_keys_from_db().unwrap();
+        // let keys = retrive_keys_from_db().unwrap();
         self.keys = StatefulList::with_items(keys);
     }
 
     pub fn create_key(&mut self, key: Key) -> () {
-        insert_key_to_db(&key).unwrap();
+        key.persist().unwrap();
+        // insert_key_to_db(&key).unwrap();
         self.keys.items.push(key);
     }
 }

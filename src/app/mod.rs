@@ -67,7 +67,7 @@ impl App {
             InputMode::Normal => match self.actions.find(key) {
                 Some(action) => self.do_normal_action(*action, key).await,
                 None => {
-                    warn!("No action accociated to {}", key);
+                    // warn!("No action accociated to {}", key);
                     AppReturn::Continue
                 }
             },
@@ -80,8 +80,6 @@ impl App {
 
     /// Handle a user action in editing mode
     async fn do_editing_action(&mut self, action: EditingAction, key: Key) -> AppReturn {
-        debug!("Editing action: {:?} for key: {:?}", action, key);
-
         match action {
             EditingAction::Quit => AppReturn::Exit,
             EditingAction::RemoveChar => {
@@ -95,17 +93,32 @@ impl App {
                 AppReturn::Continue
             }
             EditingAction::Validate => {
+                let pass = crate::models::password::Password::new();
+
+                let created_at = chrono::Utc::now();
+                let updated_at = chrono::Utc::now();
+
+                let key = crate::models::key::Key::new(
+                    None,
+                    self.input_buffer.clone(),
+                    String::from(pass.password()),
+                    created_at,
+                    updated_at,
+                );
+
+                self.dispatch(IoEvent::RegisterKey(key)).await;
+                self.dispatch(IoEvent::Refresh).await;
+
                 self.toggle_input_mode();
                 self.state.toggle_creation_popup();
                 self.input_buffer.clear();
-                // self.data.create_key(/* key */);
                 AppReturn::Continue
             }
             EditingAction::WriteChar => {
                 debug!("Write char: {}", key);
                 self.input_buffer.push(key.to_char());
                 debug!("Input buffer: {}", self.input_buffer);
-                return AppReturn::Continue;
+                AppReturn::Continue
             }
             _ => {
                 warn!("No action accociated to {}", key);
@@ -133,7 +146,17 @@ impl App {
             Action::CreateKey => {
                 self.toggle_input_mode();
                 self.state.toggle_creation_popup();
-                // self.data.create_key(/* key */);
+                AppReturn::Continue
+            }
+            Action::CopyPassword => {
+                let key = self.data.keys.state.selected();
+                if let Some(key) = key {
+                    let item = self.data.keys.items.get(key);
+                    if let Some(item) = item {
+                        let password = item.value().clone();
+                        self.dispatch(IoEvent::Copy(password.to_string())).await;
+                    }
+                }
                 AppReturn::Continue
             }
             _ => {
@@ -195,6 +218,7 @@ impl App {
             Action::MoveUp,
             Action::MoveDown,
             Action::CreateKey,
+            Action::CopyPassword,
             // Action::Sleep,
             // Action::IncrementDelay,
             // Action::DecrementDelay,
