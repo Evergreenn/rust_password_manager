@@ -25,7 +25,7 @@ where
         .direction(Direction::Vertical)
         .constraints(
             [
-                Constraint::Length(3),
+                Constraint::Length(4),
                 Constraint::Min(10),
                 Constraint::Length(3),
                 Constraint::Length(12),
@@ -35,7 +35,7 @@ where
         .split(size);
 
     // Title
-    let title = draw_title();
+    let title = draw_title(app.state());
     rect.render_widget(title, chunks[0]);
 
     // Body & Help
@@ -116,8 +116,25 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
         .split(popup_layout[1])[1]
 }
 
-fn draw_title<'a>() -> Paragraph<'a> {
-    Paragraph::new("🔑 Key Manager")
+fn draw_title<'a>(state: &AppState) -> Paragraph<'a> {
+    let tick_text = if let Some(ticks) = state.count_tick() {
+        format!("Tick count: {}", ticks)
+    } else {
+        String::default()
+    };
+
+    let text = vec![
+        Line::from(Span::styled(
+            "🔑 Key Manager",
+            Style::default().fg(Color::LightCyan),
+        )),
+        Line::from(Span::styled(
+            tick_text,
+            Style::default().fg(Color::LightCyan),
+        )),
+    ];
+
+    Paragraph::new(text)
         .style(Style::default().fg(Color::LightCyan))
         .alignment(Alignment::Center)
         .block(
@@ -137,67 +154,63 @@ fn check_size(rect: &Rect) {
     }
 }
 
-fn draw_body<'a>(_loading: bool, state: &AppState, data: &'a AppData) -> Paragraph<'a> {
+fn draw_body<'a>(_loading: bool, state: &AppState, data: &'a AppData) -> Table<'a> {
     // let initialized_text = if state.is_initialized() {
     //     "Initialized"
     // } else {
     //     "Not Initialized !"
     // };
     // let loading_text = if loading { "Loading..." } else { "" };
-    let tick_text = if let Some(ticks) = state.count_tick() {
-        format!("Tick count: {}", ticks)
-    } else {
-        String::default()
-    };
+
+    // let tick_text = if let Some(ticks) = state.count_tick() {
+    //     format!("Tick count: {}", ticks)
+    // } else {
+    //     String::default()
+    // };
 
     let selected_key = data.keys.state.selected();
     match selected_key {
         Some(idx) => {
-            data.keys
+            let normal_style = Style::default().bg(Color::Blue);
+
+            let header_cells = [
+                "id",
+                "name",
+                "password",
+                "created at",
+                "updated at",
+                "last used at",
+                "last changed at",
+            ]
+            .iter()
+            .map(|h| Cell::from(*h).style(Style::default()));
+            let header = Row::new(header_cells)
+                .style(normal_style)
+                .height(1)
+                .bottom_margin(1);
+
+            let rows = data
+                .keys
                 .items
                 .get(idx)
-                .map(|key| {
-                    // key.value().to_owned()
+                .map(|item| Row::new(item.to_vec()).bottom_margin(1));
 
-                    Paragraph::new(vec![
-                        Line::from(Span::raw(key.name().to_string())),
-                        Line::from(Span::raw(key.value())),
-                        Line::from(Span::raw(key.created_at())),
-                        Line::from(Span::raw(key.updated_at())),
-                        Line::from(Span::raw(tick_text)),
-                        // Spans::from(Span::raw(format!("Selected: {:?}", selected))),
-                    ])
-                    .style(Style::default().fg(Color::LightCyan))
-                    .alignment(Alignment::Left)
-                    .block(
-                        Block::default()
-                            .title("Body")
-                            .borders(Borders::ALL)
-                            .style(Style::default().fg(Color::White))
-                            .border_type(BorderType::Plain),
-                    )
-                })
-                .unwrap_or_else(|| Paragraph::new(vec![Line::from(Span::raw(""))]))
-            // debug!("selected_key: {:?}", e);
+            Table::new(rows)
+                .header(header)
+                .block(Block::default().borders(Borders::ALL).title("Table"))
+                .widths(&[
+                    Constraint::Percentage(15),
+                    Constraint::Percentage(10),
+                    Constraint::Percentage(15),
+                    Constraint::Percentage(15),
+                    Constraint::Percentage(15),
+                    Constraint::Percentage(15),
+                    Constraint::Percentage(15),
+                ])
         }
-        None => {
-            // debug!("selected_key: None");
-            Paragraph::new(vec![
-                Line::from(Span::raw("")),
-                // Spans::from(Span::raw(loading_text)),
-                Line::from(Span::raw(tick_text)),
-                // Spans::from(Span::raw(format!("Selected: {:?}", selected))),
-            ])
-            .style(Style::default().fg(Color::LightCyan))
-            .alignment(Alignment::Left)
-            .block(
-                Block::default()
-                    .title("Body")
-                    .borders(Borders::ALL)
-                    .style(Style::default().fg(Color::White))
-                    .border_type(BorderType::Plain),
-            )
-        }
+        None => Table::new(vec![Row::new(vec![Cell::from("No data")])])
+            .block(Block::default().borders(Borders::ALL).title("Table"))
+            .widths(&[Constraint::Percentage(100)]),
     }
 
     // Paragraph::new(vec![

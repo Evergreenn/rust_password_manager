@@ -1,37 +1,69 @@
 use chrono::prelude::*;
-use log::debug;
+use passwords::PasswordGenerator;
+use uuid::Uuid;
+
+use super::password::Password;
+// use log::debug;
 
 #[derive(Debug, Clone)]
 pub struct Key {
-    id: i64,
+    id: Uuid,
     name: String,
-    value: String,
+    password: String,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
+    last_used_at: DateTime<Utc>,
+    last_changed_at: DateTime<Utc>,
 }
 
 impl Key {
-    pub fn new(
-        id: Option<i64>,
-        name: String,
-        value: String,
-        created_at: DateTime<Utc>,
-        updated_at: DateTime<Utc>,
-    ) -> Self {
-        // let created_at = Utc::now();
-        // let updated_at = Utc::now();
-        let id = id.unwrap_or(0);
+    pub fn new(id: Option<Uuid>, name: String) -> Self {
+        let id = id.unwrap_or(Uuid::new_v4());
+        let now = Utc::now();
+        let pg = PasswordGenerator::new()
+            .length(32)
+            .numbers(true)
+            .lowercase_letters(true)
+            .uppercase_letters(true)
+            .symbols(true)
+            .spaces(false)
+            .exclude_similar_characters(true)
+            .strict(true);
+        let password = pg.generate_one().unwrap();
 
         Self {
             id,
             name,
-            value,
-            created_at,
-            updated_at,
+            password,
+            created_at: now,
+            updated_at: now,
+            last_used_at: now,
+            last_changed_at: now,
         }
     }
 
-    pub fn id(&self) -> i64 {
+    pub fn from_db(
+        id: Uuid,
+        name: String,
+        password: String,
+        created_at: DateTime<Utc>,
+        updated_at: DateTime<Utc>,
+        last_used_at: DateTime<Utc>,
+        last_changed_at: DateTime<Utc>,
+    ) -> Self {
+        Self {
+            // id: Uuid::parse_str(&id).unwrap(),
+            id,
+            name,
+            password,
+            created_at,
+            updated_at,
+            last_used_at,
+            last_changed_at,
+        }
+    }
+
+    pub fn id(&self) -> Uuid {
         self.id
     }
 
@@ -39,8 +71,8 @@ impl Key {
         &self.name
     }
 
-    pub fn value(&self) -> &str {
-        &self.value
+    pub fn password(&self) -> &str {
+        &self.password
     }
 
     pub fn created_at(&self) -> String {
@@ -52,25 +84,41 @@ impl Key {
         self.updated_at.to_rfc3339()
     }
 
+    pub fn last_used_at(&self) -> String {
+        self.last_used_at.to_rfc3339()
+    }
+
+    pub fn last_changed_at(&self) -> String {
+        self.last_changed_at.to_rfc3339()
+    }
+
     pub fn persist(&self) -> Result<(), Box<dyn std::error::Error>> {
         let conn = rusqlite::Connection::open("keys.db")?;
         conn.execute(
-            "INSERT INTO keys (name, value, created_at, updated_at) VALUES (?1, ?2, ?3, ?4)",
-            rusqlite::params![self.name, self.value, self.created_at, self.updated_at],
+            "INSERT INTO keys (id, name, password, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5)",
+            rusqlite::params![
+                self.id,
+                self.name,
+                self.password,
+                self.created_at,
+                self.updated_at
+            ],
         )?;
         Ok(())
     }
 
     pub fn retrive_keys_from_db() -> Result<Vec<Self>, Box<dyn std::error::Error>> {
         let conn = rusqlite::Connection::open("keys.db")?;
-        let mut stmt = conn.prepare("SELECT id, name, value, created_at, updated_at FROM keys")?;
+        let mut stmt = conn.prepare("SELECT id, name, password, created_at, updated_at, last_used_at, last_changed_at FROM keys" ).unwrap();
         let rows = stmt.query_map(rusqlite::params![], |row| {
-            Ok(Key::new(
+            Ok(Key::from_db(
                 row.get(0)?,
                 row.get(1)?,
                 row.get(2)?,
                 row.get(3)?,
                 row.get(4)?,
+                row.get(5)?,
+                row.get(6)?,
             ))
         })?;
 
@@ -80,4 +128,31 @@ impl Key {
         }
         Ok(keys)
     }
+
+    pub fn to_vec(&self) -> Vec<String> {
+        vec![
+            self.id.to_string(),
+            self.name.clone(),
+            self.password.clone(),
+            self.created_at(),
+            self.updated_at(),
+            self.last_used_at(),
+            self.last_changed_at(),
+        ]
+    }
 }
+
+// impl Iterator for Key {
+//     type Item = Key;
+
+//     fn next(&mut self) -> Option<Self::Item> {
+//         debug!("Iterating over key");
+//         Some(Key::new(
+//             Some(self.id),
+//             self.name.clone(),
+//             self.value.clone(),
+//             self.created_at,
+//             self.updated_at,
+//         ))
+//     }
+// }
