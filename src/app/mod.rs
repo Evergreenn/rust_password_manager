@@ -1,4 +1,4 @@
-use log::{debug, error, warn};
+use log::error;
 
 use self::actions::actions::Actions;
 use self::actions::editing_actions::EditingActions;
@@ -65,7 +65,7 @@ impl App {
     pub async fn do_action(&mut self, key: Key) -> AppReturn {
         match self.input_mode {
             InputMode::Normal => match self.actions.find(key) {
-                Some(action) => self.do_normal_action(*action, key).await,
+                Some(action) => self.do_normal_action(*action).await,
                 None => {
                     // warn!("No action accociated to {}", key);
                     AppReturn::Continue
@@ -93,18 +93,7 @@ impl App {
                 AppReturn::Continue
             }
             EditingAction::Validate => {
-                let pass = crate::models::password::Password::new();
-
-                let created_at = chrono::Utc::now();
-                let updated_at = chrono::Utc::now();
-
-                let key = crate::models::key::Key::new(
-                    None,
-                    self.input_buffer.clone(),
-                    String::from(pass.password()),
-                    created_at,
-                    updated_at,
-                );
+                let key = crate::models::key::Key::new(None, self.input_buffer.clone());
 
                 self.dispatch(IoEvent::RegisterKey(key)).await;
                 self.dispatch(IoEvent::Refresh).await;
@@ -115,20 +104,17 @@ impl App {
                 AppReturn::Continue
             }
             EditingAction::WriteChar => {
-                debug!("Write char: {}", key);
                 self.input_buffer.push(key.to_char());
-                debug!("Input buffer: {}", self.input_buffer);
                 AppReturn::Continue
-            }
-            _ => {
-                warn!("No action accociated to {}", key);
-                AppReturn::Continue
-            }
+            } // _ => {
+              //     warn!("No action accociated to {}", key);
+              //     AppReturn::Continue
+              // }
         }
     }
 
     /// Handle a user action in normal mode
-    async fn do_normal_action(&mut self, action: Action, key: Key) -> AppReturn {
+    async fn do_normal_action(&mut self, action: Action) -> AppReturn {
         match action {
             Action::Quit => AppReturn::Exit,
             Action::Help => {
@@ -153,16 +139,15 @@ impl App {
                 if let Some(key) = key {
                     let item = self.data.keys.items.get(key);
                     if let Some(item) = item {
-                        let password = item.value().clone();
+                        let password = item.password().clone();
                         self.dispatch(IoEvent::Copy(password.to_string())).await;
                     }
                 }
                 AppReturn::Continue
-            }
-            _ => {
-                warn!("No action accociated to {}", key);
-                AppReturn::Continue
-            } // Action::Sleep => {
+            } // _ => {
+              //     warn!("No action accociated to {}", key);
+              //     AppReturn::Continue
+              // } // Action::Sleep => {
 
               //     if let Some(duration) = self.state.duration().cloned() {
               //         // Sleep is an I/O action, we dispatch on the IO channel that's run on another thread

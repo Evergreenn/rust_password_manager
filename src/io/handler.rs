@@ -43,21 +43,27 @@ impl IoAsyncHandler {
     }
 
     async fn register_key(&mut self, key: Key) -> Result<()> {
-        info!("🔑 Register key");
-        // let mut app = self.app.lock().await;
-        key.persist().unwrap();
-        // app.data.register_key(key);
+        let save = key.persist();
+        if let Err(err) = save {
+            error!("Cannot save key: {:?}", err);
+        } else {
+            info!("🔑 Key saved");
+        }
         Ok(())
     }
 
     async fn do_copy(&mut self, password: String) -> Result<()> {
-        info!("📝 Copy password to clipboard");
         let mut clipboard = Clipboard::new()?;
-        clipboard.set_text(password)?;
+        let clipped = clipboard.set_text(password);
+        if let Err(err) = clipped {
+            error!("Cannot copy to clipboard: {:?}", err);
+        } else {
+            info!("📝 Copy password to clipboard");
+        }
+
         Ok(())
     }
 
-    /// We use dummy implementation here, just wait 1s
     async fn do_initialize(&mut self) -> Result<()> {
         info!("🚀 Initialize the application");
         let mut app = self.app.lock().await;
@@ -75,15 +81,4 @@ impl IoAsyncHandler {
 
         Ok(())
     }
-
-    // async fn do_sleep(&mut self, duration: Duration) -> Result<()> {
-    //     info!("😴 Go sleeping for {:?}...", duration);
-    //     tokio::time::sleep(duration).await;
-    //     info!("⏰ Wake up !");
-    //     // Notify the app for having slept
-    //     let mut app = self.app.lock().await;
-    //     app.slept();
-
-    //     Ok(())
-    // }
 }

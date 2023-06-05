@@ -18,3 +18,4 @@ rusqlite = { version = "0.29.0", features =["bundled", "chrono", "serde_json", "
 passwords = "3.1.13"
 chrono = "0.4.26"
 arboard = "3.2.0"
+uuid = {version = "1.3.3", features = ["serde", "v4"]}
