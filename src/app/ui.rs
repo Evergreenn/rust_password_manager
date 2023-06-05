@@ -141,7 +141,7 @@ fn draw_title<'a>(state: &AppState) -> Paragraph<'a> {
             Block::default()
                 .borders(Borders::ALL)
                 .style(Style::default().fg(Color::White))
-                .border_type(BorderType::Plain),
+                .border_type(BorderType::Rounded),
         )
 }
 
@@ -171,7 +171,7 @@ fn draw_body<'a>(_loading: bool, state: &AppState, data: &'a AppData) -> Table<'
     let selected_key = data.keys.state.selected();
     match selected_key {
         Some(idx) => {
-            let normal_style = Style::default().bg(Color::Blue);
+            let normal_style = Style::default().bg(Color::DarkGray).fg(Color::White);
 
             let header_cells = [
                 "id",
@@ -246,7 +246,8 @@ fn draw_keys<B: Backend>(data: &mut AppData, body_chunk: Rect, rect: &mut Frame<
         .block(Block::default().borders(Borders::ALL).title("List"))
         .highlight_style(
             Style::default()
-                .bg(Color::Gray)
+                .bg(Color::DarkGray)
+                .fg(Color::White)
                 .add_modifier(Modifier::BOLD),
         );
     // .highlight_symbol(">> ");
@@ -268,10 +269,13 @@ fn draw_creation_form<'a>(app: &'a App) -> Paragraph<'a> {
         .alignment(Alignment::Left)
         .block(
             Block::default()
-                .title("Register a new Key")
+                .title(Span::styled(
+                    "Register a new Key",
+                    Style::default().fg(Color::LightCyan),
+                ))
                 .borders(Borders::ALL)
                 .style(Style::default().fg(Color::White))
-                .border_type(BorderType::Plain),
+                .border_type(BorderType::Rounded),
         )
 }
 
@@ -307,7 +311,7 @@ fn draw_help(actions: &Actions) -> Table {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .border_type(BorderType::Plain)
+                .border_type(BorderType::Rounded)
                 .title("Help"),
         )
         .widths(&[Constraint::Length(11), Constraint::Min(20)])

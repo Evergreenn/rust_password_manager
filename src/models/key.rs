@@ -1,4 +1,5 @@
 use chrono::prelude::*;
+use log::debug;
 use passwords::PasswordGenerator;
 use uuid::Uuid;
 
@@ -52,7 +53,6 @@ impl Key {
         last_changed_at: DateTime<Utc>,
     ) -> Self {
         Self {
-            // id: Uuid::parse_str(&id).unwrap(),
             id,
             name,
             password,
@@ -90,6 +90,43 @@ impl Key {
 
     pub fn last_changed_at(&self) -> String {
         self.last_changed_at.to_rfc3339()
+    }
+
+    pub fn update_password(&mut self) {
+        let now = Utc::now();
+        let pg = PasswordGenerator::new()
+            .length(32)
+            .numbers(true)
+            .lowercase_letters(true)
+            .uppercase_letters(true)
+            .symbols(true)
+            .spaces(false)
+            .exclude_similar_characters(true)
+            .strict(true);
+        self.password = pg.generate_one().unwrap();
+        self.updated_at = now;
+        self.last_changed_at = now;
+    }
+
+    pub fn update_last_used_at(&mut self) {
+        let now = Utc::now();
+        self.last_used_at = now;
+    }
+
+    pub fn update_in_database(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let conn = rusqlite::Connection::open("keys.db")?;
+        conn.execute(
+            "UPDATE keys SET name = ?2, password = ?3, updated_at = ?4, last_used_at = ?5, last_changed_at = ?6 WHERE id = ?1",
+            rusqlite::params![
+                self.id,
+                self.name,
+                self.password,
+                self.updated_at,
+                self.last_used_at,
+                self.last_changed_at
+            ],
+        )?;
+        Ok(())
     }
 
     pub fn persist(&self) -> Result<(), Box<dyn std::error::Error>> {

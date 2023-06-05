@@ -22,7 +22,7 @@ impl IoAsyncHandler {
     pub async fn handle_io_event(&mut self, io_event: IoEvent) {
         let result = match io_event {
             IoEvent::Initialize => self.do_initialize().await,
-            IoEvent::Copy(password) => self.do_copy(password).await,
+            IoEvent::Copy(key) => self.do_copy(key).await,
             IoEvent::RegisterKey(key) => self.register_key(key).await,
             IoEvent::Refresh => self.refresh_application_state().await,
         };
@@ -52,9 +52,9 @@ impl IoAsyncHandler {
         Ok(())
     }
 
-    async fn do_copy(&mut self, password: String) -> Result<()> {
-        let mut clipboard = Clipboard::new()?;
-        let clipped = clipboard.set_text(password);
+    async fn do_copy(&mut self, key: Key) -> Result<()> {
+        let mut app = self.app.lock().await;
+        let clipped = app.clipboard.set_text(key.password());
         if let Err(err) = clipped {
             error!("Cannot copy to clipboard: {:?}", err);
         } else {
@@ -72,10 +72,8 @@ impl IoAsyncHandler {
 
         info!("💾 Retrieve data");
         crate::repository::init_database_schemas()?;
-        // app.set_connection(co);
         app.data.load_key_list();
 
-        // tokio::time::sleep(Duration::from_secs(1)).await;
         app.initialized(); // we could update the app state
         info!("🍾 Application initialized");
 
