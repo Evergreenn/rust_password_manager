@@ -8,7 +8,7 @@ pub mod handler;
 pub enum IoEvent {
     Initialize, // Launch to initialize the application
     // Sleep(Duration), // Just take a little break
-    Copy(String),
+    Copy(Key), // Copy the key
     RegisterKey(Key),
     Refresh,
 }

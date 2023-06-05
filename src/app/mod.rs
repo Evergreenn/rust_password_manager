@@ -1,4 +1,5 @@
-use log::error;
+use arboard::Clipboard;
+use log::{debug, error, info};
 
 use self::actions::actions::Actions;
 use self::actions::editing_actions::EditingActions;
@@ -26,17 +27,15 @@ enum InputMode {
 
 /// The main application, containing the state
 pub struct App {
-    /// We could dispatch an IO event
     io_tx: tokio::sync::mpsc::Sender<IoEvent>,
-    /// Contextual EditingActions
     actions: Actions,
     editing_actions: EditingActions,
-    /// State
     is_loading: bool,
     state: AppState,
     input_mode: InputMode,
     input_buffer: String,
     pub data: AppData,
+    pub clipboard: Clipboard,
 }
 
 impl App {
@@ -48,6 +47,7 @@ impl App {
         let data = AppData::default();
         let input_mode = InputMode::Normal;
         let input_buffer = String::new();
+        let clipboard = Clipboard::new().unwrap();
 
         Self {
             io_tx,
@@ -58,6 +58,7 @@ impl App {
             data,
             input_mode,
             input_buffer,
+            clipboard,
         }
     }
 
@@ -137,33 +138,20 @@ impl App {
             Action::CopyPassword => {
                 let key = self.data.keys.state.selected();
                 if let Some(key) = key {
-                    let item = self.data.keys.items.get(key);
-                    if let Some(item) = item {
-                        let password = item.password().clone();
-                        self.dispatch(IoEvent::Copy(password.to_string())).await;
+                    if let Some(item) = self.data.keys.items.get_mut(key) {
+                        item.update_last_used_at();
+                        let updated = item.update_in_database();
+                        if let Err(err) = updated {
+                            error!("Cannot update key: {:?}", err);
+                        } else {
+                            info!("🔑 Key updated");
+                        }
+                        let item = item.clone();
+                        self.dispatch(IoEvent::Copy(item)).await;
                     }
                 }
                 AppReturn::Continue
-            } // _ => {
-              //     warn!("No action accociated to {}", key);
-              //     AppReturn::Continue
-              // } // Action::Sleep => {
-
-              //     if let Some(duration) = self.state.duration().cloned() {
-              //         // Sleep is an I/O action, we dispatch on the IO channel that's run on another thread
-              //         self.dispatch(IoEvent::Sleep(duration)).await
-              //     }
-              //     AppReturn::Continue
-              // }
-              // IncrementDelay and DecrementDelay is handled in the UI thread
-              // Action::IncrementDelay => {
-              //     self.state.increment_delay();
-              //     AppReturn::Continue
-              // }
-              // // Note, that we clamp the duration, so we stay >= 0
-              // Action::DecrementDelay => {
-              //     self.state.decrement_delay();
-              // }
+            }
         }
     }
 
@@ -204,9 +192,6 @@ impl App {
             Action::MoveDown,
             Action::CreateKey,
             Action::CopyPassword,
-            // Action::Sleep,
-            // Action::IncrementDelay,
-            // Action::DecrementDelay,
         ]
         .into();
         self.editing_actions = vec![
