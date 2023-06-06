@@ -82,7 +82,10 @@ impl App {
     /// Handle a user action in editing mode
     async fn do_editing_action(&mut self, action: EditingAction, key: Key) -> AppReturn {
         match action {
-            EditingAction::Quit => AppReturn::Exit,
+            EditingAction::Quit => {
+                self.dispatch(IoEvent::Close).await;
+                AppReturn::Exit
+            }
             EditingAction::RemoveChar => {
                 self.input_buffer.pop();
                 AppReturn::Continue
@@ -117,7 +120,10 @@ impl App {
     /// Handle a user action in normal mode
     async fn do_normal_action(&mut self, action: Action) -> AppReturn {
         match action {
-            Action::Quit => AppReturn::Exit,
+            Action::Quit => {
+                self.dispatch(IoEvent::Close).await;
+                AppReturn::Exit
+            }
             Action::Help => {
                 self.state.toggle_help();
                 AppReturn::Continue
