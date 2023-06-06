@@ -1,2 +1,2 @@
-pub mod actions;
 pub mod editing_actions;
+pub mod normal_actions;

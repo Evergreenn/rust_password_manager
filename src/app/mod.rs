@@ -1,11 +1,11 @@
 use arboard::Clipboard;
-use log::{debug, error, info};
+use log::{error, info};
 
-use self::actions::actions::Actions;
 use self::actions::editing_actions::EditingActions;
+use self::actions::normal_actions::Actions;
 use self::state::{AppData, AppState};
-use crate::app::actions::actions::Action;
 use crate::app::actions::editing_actions::EditingAction;
+use crate::app::actions::normal_actions::Action;
 use crate::inputs::key::Key;
 use crate::io::IoEvent;
 

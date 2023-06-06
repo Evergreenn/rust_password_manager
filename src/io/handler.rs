@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use arboard::Clipboard;
 use eyre::Result;
 use log::{error, info};
 

@@ -8,7 +8,7 @@ use ratatui::widgets::{
 use ratatui::Frame;
 use tui_logger::TuiLoggerWidget;
 
-use super::actions::actions::Actions;
+use super::actions::normal_actions::Actions;
 use super::state::{AppData, AppState};
 use crate::app::App;
 use crate::models::key::Key;
@@ -61,8 +61,8 @@ where
     }
 
     if app.state.is_creation_popup() {
-        let input = draw_creation_form(&app);
-        let area = centered_rect(60, 7, size);
+        let input = draw_creation_form(app);
+        let area = centered_rect(60, 10, size);
         rect.render_widget(Clear, area); //this clears out the background
         rect.render_widget(input, area);
 
@@ -118,7 +118,7 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 
 fn draw_title<'a>(state: &AppState) -> Paragraph<'a> {
     let tick_text = if let Some(ticks) = state.count_tick() {
-        format!("Tick count: {}", ticks)
+        format!("Tick count: {ticks}")
     } else {
         String::default()
     };
@@ -154,7 +154,7 @@ fn check_size(rect: &Rect) {
     }
 }
 
-fn draw_body<'a>(_loading: bool, state: &AppState, data: &'a AppData) -> Table<'a> {
+fn draw_body<'a>(_loading: bool, _state: &AppState, data: &'a AppData) -> Table<'a> {
     // let initialized_text = if state.is_initialized() {
     //     "Initialized"
     // } else {
@@ -221,7 +221,7 @@ fn draw_body<'a>(_loading: bool, state: &AppState, data: &'a AppData) -> Table<'
     // ])
 }
 
-fn draw_keys<B: Backend>(data: &mut AppData, body_chunk: Rect, rect: &mut Frame<B>) -> () {
+fn draw_keys<B: Backend>(data: &mut AppData, body_chunk: Rect, rect: &mut Frame<B>) {
     let key_style = Style::default().fg(Color::LightCyan);
 
     let items: Vec<ListItem> = data
@@ -255,7 +255,7 @@ fn draw_keys<B: Backend>(data: &mut AppData, body_chunk: Rect, rect: &mut Frame<
     rect.render_stateful_widget(items, body_chunk, &mut data.keys.state);
 }
 
-fn draw_creation_form<'a>(app: &'a App) -> Paragraph<'a> {
+fn draw_creation_form(app: &App) -> Paragraph {
     let text = vec![
         Line::from(Span::styled(
             "Key Name: ",

@@ -103,3 +103,9 @@ impl Display for Password {
         write!(f, "{}", self.password)
     }
 }
+
+impl Default for Password {
+    fn default() -> Self {
+        Self::new()
+    }
+}

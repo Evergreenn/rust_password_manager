@@ -70,7 +70,7 @@ impl Key {
             10 => Key::F10,
             11 => Key::F11,
             12 => Key::F12,
-            _ => panic!("unknown function key: F{}", n),
+            _ => panic!("unknown function key: F{n}"),
         }
     }
     pub fn to_char(&self) -> char {
@@ -87,10 +87,10 @@ impl Display for Key {
             Key::Alt(' ') => write!(f, "<Alt+Space>"),
             Key::Ctrl(' ') => write!(f, "<Ctrl+Space>"),
             Key::Char(' ') => write!(f, "<Space>"),
-            Key::Alt(c) => write!(f, "<Alt+{}>", c),
-            Key::Ctrl(c) => write!(f, "<Ctrl+{}>", c),
-            Key::Char(c) => write!(f, "<{}>", c),
-            _ => write!(f, "<{:?}>", self),
+            Key::Alt(c) => write!(f, "<Alt+{c}>"),
+            Key::Ctrl(c) => write!(f, "<Ctrl+{c}>"),
+            Key::Char(c) => write!(f, "<{c}>"),
+            _ => write!(f, "<{self:?}>"),
         }
     }
 }
