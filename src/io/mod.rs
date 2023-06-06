@@ -11,4 +11,5 @@ pub enum IoEvent {
     Copy(Key), // Copy the key
     RegisterKey(Key),
     Refresh,
+    Close,
 }

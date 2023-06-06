@@ -20,6 +20,21 @@ where
     let size = rect.size();
     check_size(&size);
 
+    // if !app.state.is_initialized() {
+    //     let input = draw_master_key_form(app);
+    //     let area = centered_rect(60, 10, size);
+    //     rect.render_widget(Clear, area); //this clears out the background
+    //     rect.render_widget(input, area);
+    //     // draw_loading(rect, size);
+    // } else {
+    draw_app(rect, app, size);
+    // }
+}
+
+fn draw_app<B>(rect: &mut Frame<B>, app: &mut App, size: Rect)
+where
+    B: Backend,
+{
     // Vertical layout
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -253,6 +268,30 @@ fn draw_keys<B: Backend>(data: &mut AppData, body_chunk: Rect, rect: &mut Frame<
     // .highlight_symbol(">> ");
 
     rect.render_stateful_widget(items, body_chunk, &mut data.keys.state);
+}
+
+fn draw_master_key_form(app: &App) -> Paragraph {
+    // let text = vec![
+    //     Line::from(Span::styled(
+    //         "Master key password: ",
+    //         Style::default().fg(Color::White),
+    //     )),
+    //     Line::from(Span::raw(app.input_buffer.as_str())),
+    // ];
+
+    Paragraph::new("")
+        .style(Style::default().fg(Color::LightCyan))
+        .alignment(Alignment::Left)
+        .block(
+            Block::default()
+                .title(Span::styled(
+                    "Master Key",
+                    Style::default().fg(Color::LightCyan),
+                ))
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::White))
+                .border_type(BorderType::Rounded),
+        )
 }
 
 fn draw_creation_form(app: &App) -> Paragraph {

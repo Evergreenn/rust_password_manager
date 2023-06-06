@@ -13,6 +13,7 @@ use ratatui::Terminal;
 use crate::app::ui;
 
 pub mod app;
+pub mod crypto;
 pub mod inputs;
 pub mod io;
 pub mod models;
