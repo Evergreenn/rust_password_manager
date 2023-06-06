@@ -23,6 +23,6 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
     - name: Clippy
-      run: cargo clippy -- verbose -- -D warning
+      run: cargo clippy --verbose -- -D warnings
     - name: Audit
       run: cargo audit
