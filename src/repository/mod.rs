@@ -1,7 +1,5 @@
 use rusqlite::{Connection, Result};
 
-pub mod keys;
-
 pub fn init_connection() -> Result<Connection> {
     let co = Connection::open("keys.db")?;
     Ok(co)

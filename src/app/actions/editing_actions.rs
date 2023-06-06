@@ -46,7 +46,7 @@ impl Display for EditingAction {
             EditingAction::Dismiss => "Dismiss",
             _ => "",
         };
-        write!(f, "{}", str)
+        write!(f, "{str}")
     }
 }
 
@@ -97,7 +97,7 @@ impl From<Vec<EditingAction>> for EditingActions {
                     .map(EditingAction::to_string)
                     .collect::<Vec<_>>()
                     .join(", ");
-                format!("Conflict key {} with action {}", key, actions)
+                format!("Conflict key {key} with action {actions}")
             })
             .collect::<Vec<_>>();
         if !errors.is_empty() {

@@ -1,10 +1,6 @@
 use chrono::prelude::*;
-use log::debug;
 use passwords::PasswordGenerator;
 use uuid::Uuid;
-
-use super::password::Password;
-// use log::debug;
 
 #[derive(Debug, Clone)]
 pub struct Key {

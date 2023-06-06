@@ -1,11 +1,6 @@
-// use std::time::Duration;
-
-use std::fmt::Display;
-
-use ratatui::widgets::ListState;
-
 use crate::models::key::Key;
-// use crate::repository::keys::{insert_key_to_db, retrive_keys_from_db};
+use ratatui::widgets::ListState;
+use std::fmt::Display;
 
 #[derive(Clone)]
 pub enum AppState {
@@ -142,13 +137,13 @@ pub struct AppData {
 }
 
 impl AppData {
-    pub fn load_key_list(&mut self) -> () {
+    pub fn load_key_list(&mut self) {
         let keys = Key::retrive_keys_from_db().unwrap();
         // let keys = retrive_keys_from_db().unwrap();
         self.keys = StatefulList::with_items(keys);
     }
 
-    pub fn create_key(&mut self, key: Key) -> () {
+    pub fn create_key(&mut self, key: Key) {
         key.persist().unwrap();
         // insert_key_to_db(&key).unwrap();
         self.keys.items.push(key);
@@ -161,7 +156,7 @@ impl Display for AppData {
         for key in &self.keys.items {
             keys.push_str(&format!("{}\n", key.name()));
         }
-        write!(f, "{}", keys)
+        write!(f, "{keys}")
     }
 }
 
