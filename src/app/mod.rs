@@ -1,5 +1,5 @@
 use arboard::Clipboard;
-use log::{error, info};
+use log::{debug, error, info};
 
 use self::actions::editing_actions::EditingActions;
 use self::actions::normal_actions::Actions;
@@ -41,7 +41,14 @@ pub struct App {
 impl App {
     pub fn new(io_tx: tokio::sync::mpsc::Sender<IoEvent>) -> Self {
         let actions = vec![Action::Quit].into();
-        let editing_actions = vec![EditingAction::Quit].into();
+        let editing_actions = vec![
+            EditingAction::Quit,
+            EditingAction::RemoveChar,
+            EditingAction::Dismiss,
+            EditingAction::Validate,
+            EditingAction::WriteChar,
+        ]
+        .into();
         let is_loading = false;
         let state = AppState::default();
         let data = AppData::default();
@@ -60,6 +67,14 @@ impl App {
             input_buffer,
             clipboard,
         }
+    }
+
+    pub fn get_input_buffer(&self) -> &str {
+        &self.input_buffer
+    }
+
+    pub fn clear_input_buffer(&mut self) {
+        self.input_buffer.clear();
     }
 
     /// Handle a user action
@@ -96,15 +111,22 @@ impl App {
                 self.input_buffer.clear();
                 AppReturn::Continue
             }
+
             EditingAction::Validate => {
                 let key = crate::models::key::Key::new(None, self.input_buffer.clone());
 
-                self.dispatch(IoEvent::RegisterKey(key)).await;
-                self.dispatch(IoEvent::Refresh).await;
+                if self.state.is_initialized() {
+                    self.dispatch(IoEvent::RegisterKey(key)).await;
+                    self.dispatch(IoEvent::Refresh).await;
+                    self.toggle_input_mode();
+                    self.state.toggle_creation_popup();
+                    self.input_buffer.clear();
+                } else {
+                    debug!("Initialization");
+                    self.dispatch(IoEvent::Initialize).await;
+                    // self.state.set_initialization(self.input_buffer.clone());
+                }
 
-                self.toggle_input_mode();
-                self.state.toggle_creation_popup();
-                self.input_buffer.clear();
                 AppReturn::Continue
             }
             EditingAction::WriteChar => {

@@ -33,10 +33,14 @@ pub async fn start_ui(app: &Arc<tokio::sync::Mutex<App>>) -> Result<()> {
     let mut events = Events::new(tick_rate);
 
     // Trigger state change from Init to Initialized
+    // {
+    //     let mut app = app.lock().await;
+    //     // Here we assume the the first load is a long task
+    //     app.dispatch(IoEvent::Initialize).await;
+    // }
     {
         let mut app = app.lock().await;
-        // Here we assume the the first load is a long task
-        app.dispatch(IoEvent::Initialize).await;
+        app.toggle_input_mode();
     }
 
     loop {

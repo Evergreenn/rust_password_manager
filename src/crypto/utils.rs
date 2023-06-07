@@ -17,7 +17,8 @@ pub fn encrypt_small_file(
 
     let file_data = fs::read(filepath)?;
 
-    let nonce = ChaCha20Poly1305::generate_nonce(OsRng);
+    // let nonce = ChaCha20Poly1305::generate_nonce(OsRng);
+    let nonce = Nonce::from_slice("0123456789ab".as_bytes());
 
     let encrypted_file = cipher
         .encrypt(&nonce, file_data.as_ref())
@@ -37,7 +38,9 @@ pub fn decrypt_small_file(
 
     let file_data = fs::read(encrypted_file_path)?;
 
-    let nonce = ChaCha20Poly1305::generate_nonce(OsRng);
+    // let nonce = ChaCha20Poly1305::generate_nonce(OsRng);
+    let nonce = Nonce::from_slice("0123456789ab".as_bytes());
+    // Nonce::from_slice("0123456789ab".as_bytes());
 
     let decrypted_file = cipher
         .decrypt(&nonce, file_data.as_ref())

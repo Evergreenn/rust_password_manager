@@ -1,10 +1,15 @@
-use crate::models::key::Key;
-use ratatui::widgets::ListState;
 use std::fmt::Display;
+
+use ratatui::widgets::ListState;
+
+use crate::models::key::Key;
 
 #[derive(Clone)]
 pub enum AppState {
     Init,
+    // Initialization {
+    //     password: String,
+    // },
     Initialized {
         // duration: Duration,
         counter_tick: u64,
@@ -24,6 +29,26 @@ impl AppState {
             show_creation_popup: false,
         }
     }
+
+    // pub fn is_in_initialization(&self) -> bool {
+    //     if let Self::Initialization { .. } = self {
+    //         true
+    //     } else {
+    //         false
+    //     }
+    // }
+
+    // pub fn initialization(&self) -> Option<&String> {
+    //     if let Self::Initialization { password } = self {
+    //         Some(password)
+    //     } else {
+    //         None
+    //     }
+    // }
+
+    // pub fn set_initialization(&mut self, password: String) {
+    //     *self = Self::Initialization { password };
+    // }
 
     pub fn toggle_help(&mut self) {
         if let Self::Initialized { show_help, .. } = self {
