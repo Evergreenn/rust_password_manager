@@ -1,7 +1,8 @@
+use std::path::Path;
 use std::sync::Arc;
 
 use eyre::Result;
-use log::{error, info};
+use log::{debug, error, info};
 use pbkdf2::pbkdf2_hmac;
 use sha2::Sha256;
 
@@ -13,11 +14,15 @@ use crate::models::key::Key;
 /// In the IO thread, we handle IO event without blocking the UI thread
 pub struct IoAsyncHandler {
     app: Arc<tokio::sync::Mutex<App>>,
+    password: String,
 }
 
 impl IoAsyncHandler {
     pub fn new(app: Arc<tokio::sync::Mutex<App>>) -> Self {
-        Self { app }
+        Self {
+            app,
+            password: String::new(),
+        }
     }
 
     /// We could be async here
@@ -69,7 +74,8 @@ impl IoAsyncHandler {
 
     async fn close_application(&mut self) -> Result<()> {
         info!("🚪 Close the application");
-        let password = b"password";
+        // let password = b"password";
+        let password = self.password.as_bytes();
         let salt = b"salt";
         // number of iterations
         let n = 4096;
@@ -83,6 +89,7 @@ impl IoAsyncHandler {
             info!("🔒 File encrypted");
             std::fs::remove_file("./keys.db")?;
         }
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
         Ok(())
     }
 
@@ -90,34 +97,57 @@ impl IoAsyncHandler {
         info!("🚀 Initialize the application");
         let mut app = self.app.lock().await;
 
+        app.toggle_input_mode();
+
+        let password = app.get_input_buffer().as_bytes();
+        self.password = app.get_input_buffer().clone().to_string();
+
+        // while !app.is {
+        //     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        // }
+
         //TODO: get the configuration
-        //
+        //TODO: make a promnp to ask for the password
 
-        let password = b"password";
-        let salt = b"salt";
-        // number of iterations
-        let n = 4096;
+        if std::path::Path::exists(Path::new("./keys.db.encrypt")) {
+            info!("🔒 File encrypted");
 
-        let mut key1 = [0u8; 32];
-        pbkdf2_hmac::<Sha256>(password, salt, n, &mut key1);
+            // let password = b"password";
+            // let password = app.get_input_buffer().as_bytes();
+            // self.password = app.get_input_buffer().clone().to_string();
 
-        // let key = String::from("01234567890123456789012345678901").into_bytes();
+            // debug!("password: {:?}", app.get_input_buffer());
+            // debug!("self.password: {:?}", self.password);
 
-        let res = decrypt_small_file("./keys.db.encrypt", "./keys.db", &key1);
-        if let Err(err) = res {
-            error!("Cannot decrypt file: {:?}", err);
+            let salt = b"salt";
+            // number of iterations
+            let n = 4096;
+
+            let mut key1 = [0u8; 32];
+            pbkdf2_hmac::<Sha256>(password, salt, n, &mut key1);
+
+            let res = decrypt_small_file("./keys.db.encrypt", "./keys.db", &key1);
+            if let Err(err) = res {
+                error!("Cannot decrypt file: {:?}", err);
+
+                app.toggle_input_mode();
+            } else {
+                info!("🔓 File decrypted");
+                std::fs::remove_file("./keys.db.encrypt")?;
+                info!("💾 Retrieve data");
+                app.data.load_key_list();
+
+                app.initialized(); // we could update the app state
+                info!("🍾 Application initialized");
+            }
         } else {
-            info!("🔓 File decrypted");
-            std::fs::remove_file("./keys.db.encrypt")?;
-            info!("💾 Retrieve data");
+            info!("🔒 File not encrypted");
             crate::repository::init_database_schemas("keys.db")?;
-            app.data.load_key_list();
-
-            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-
             app.initialized(); // we could update the app state
             info!("🍾 Application initialized");
         }
+
+        app.clear_input_buffer();
         Ok(())
     }
 }

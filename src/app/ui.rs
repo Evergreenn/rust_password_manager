@@ -20,15 +20,22 @@ where
     let size = rect.size();
     check_size(&size);
 
-    // if !app.state.is_initialized() {
-    //     let input = draw_master_key_form(app);
-    //     let area = centered_rect(60, 10, size);
-    //     rect.render_widget(Clear, area); //this clears out the background
-    //     rect.render_widget(input, area);
-    //     // draw_loading(rect, size);
-    // } else {
-    draw_app(rect, app, size);
-    // }
+    if !app.state.is_initialized() {
+        let input = draw_master_key_form(app);
+        let area = centered_rect(60, 10, size);
+        rect.render_widget(Clear, area); //this clears out the background
+        rect.render_widget(input, area);
+
+        // let helper = draw_logs();
+        // let t = Rect::new(0, 0, 90, 20);
+        // rect.render_widget(Clear, t); //this clears out the background
+        // rect.render_widget(helper, t);
+
+        rect.set_cursor(area.x + app.input_buffer.len() as u16 + 1, area.y + 1)
+        // draw_loading(rect, size);
+    } else {
+        draw_app(rect, app, size);
+    }
 }
 
 fn draw_app<B>(rect: &mut Frame<B>, app: &mut App, size: Rect)
@@ -276,10 +283,16 @@ fn draw_master_key_form(app: &App) -> Paragraph {
     //         "Master key password: ",
     //         Style::default().fg(Color::White),
     //     )),
-    //     Line::from(Span::raw(app.input_buffer.as_str())),
+    // Line::from(Span::raw(app.input_buffer.as_str())),
     // ];
 
-    Paragraph::new("")
+    let obfuscate_text = app
+        .input_buffer
+        .as_str()
+        .chars()
+        .map(|_| '*')
+        .collect::<String>();
+    Paragraph::new(Line::from(Span::raw(obfuscate_text)))
         .style(Style::default().fg(Color::LightCyan))
         .alignment(Alignment::Left)
         .block(
