@@ -22,10 +22,10 @@ pub fn encrypt_small_file(
     let nonce = Nonce::from_slice("0123456789ab".as_bytes());
 
     let encrypted_file = cipher
-        .encrypt(&nonce, file_data.as_ref())
+        .encrypt(nonce, file_data.as_ref())
         .map_err(|err| anyhow!("Encrypting small file: {err}"))?;
 
-    fs::write(&dist, encrypted_file)?;
+    fs::write(dist, encrypted_file)?;
 
     Ok(())
 }
@@ -42,10 +42,10 @@ pub fn decrypt_small_file(
     let nonce = Nonce::from_slice("0123456789ab".as_bytes());
 
     let decrypted_file = cipher
-        .decrypt(&nonce, file_data.as_ref())
+        .decrypt(nonce, file_data.as_ref())
         .map_err(|err| anyhow!("Decrypting small file: {}", err))?;
 
-    fs::write(&dist, decrypted_file)?;
+    fs::write(dist, decrypted_file)?;
 
     Ok(())
 }
