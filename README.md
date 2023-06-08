@@ -7,6 +7,8 @@ This is a terminal user interface (TUI) password manager written in Rust. It all
 ## Features
 
   - [ ] Securely store and manage passwords
+      - [X] Create and encrypt the database with a master password
+      - [ ] Allow to modify the master password
   - [X] Generate strong and unique passwords
   - [X] Copy passwords to the clipboard
   - [ ] Search and retrieve passwords
@@ -40,31 +42,9 @@ Before running the Rust Password Manager, ensure that you have the following pre
 
 ## Usage
 
-The Rust Password Manager provides an interactive TUI for managing your passwords. Once you run the application, you can navigate through the interface using arrow keys and interact with the menus and options.
-
-Here are some common actions:
-
-- Use arrow keys to navigate through menus and options
-- Press Enter to select an option or confirm an action
-- Press Esc or q to exit or go back
+The Rust Password Manager provides an interactive TUI for managing your passwords. Once you run the application, you can navigate through the interface using vim keys and interact with the menus and options.
 
 For more detailed information on how to use the TUI app, please refer to the [user manual](user-manual.md).
-
-## Dependencies
-
-The Rust Password Manager project relies on the following dependencies:
-
-- log = "0.4"
-- ratatui = { version = "0.21.0", features = ["all-widgets"]}
-- crossterm = "0.26.1"
-- tokio = { version = "1", features = ["full"] }
-- eyre = "0.6.8"
-- tui-logger = { version = "0.9.2", features = ["ratatui-support"], default_features = false}
-- rusqlite = { version = "0.29.0", features =["bundled", "chrono", "serde_json", "uuid"]}
-- passwords = "3.1.13"
-- chrono = "0.4.26"
-- arboard = "3.2.0"
-- uuid = {version = "1.3.3", features = ["serde", "v4"]}
 
 ## Contributing
 

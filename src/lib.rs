@@ -6,7 +6,6 @@ use app::{App, AppReturn};
 use eyre::Result;
 use inputs::events::Events;
 use inputs::InputEvent;
-use io::IoEvent;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 
