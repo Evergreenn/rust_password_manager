@@ -92,10 +92,10 @@ impl IoAsyncHandler {
 
         app.toggle_input_mode();
 
-        self.password = app.get_input_buffer().clone().to_string();
+        // self.password = app.get_input_buffer().clone().to_string();
+        self.password = <String>::clone(&app.get_input_buffer().to_string());
 
         //TODO: get the configuration
-        //TODO: make a promnp to ask for the password
 
         if std::path::Path::exists(Path::new("./keys.db.encrypt")) {
             info!("🔒 File encrypted");
