@@ -2,13 +2,11 @@ use std::path::Path;
 use std::sync::Arc;
 
 use eyre::Result;
-use log::{debug, error, info};
-use pbkdf2::pbkdf2_hmac;
-use sha2::Sha256;
+use log::{error, info};
 
 use super::IoEvent;
 use crate::app::App;
-use crate::crypto::utils::{decrypt_small_file, encrypt_small_file};
+use crate::crypto::utils::{decrypt_small_file, encrypt_small_file, gen_key_from_password};
 use crate::models::key::Key;
 
 /// In the IO thread, we handle IO event without blocking the UI thread
@@ -74,14 +72,9 @@ impl IoAsyncHandler {
 
     async fn close_application(&mut self) -> Result<()> {
         info!("🚪 Close the application");
-        // let password = b"password";
-        let password = self.password.as_bytes();
-        let salt = b"salt";
-        // number of iterations
-        let n = 4096;
 
-        let mut key1 = [0u8; 32];
-        pbkdf2_hmac::<Sha256>(password, salt, n, &mut key1);
+        let key1 = gen_key_from_password(self.password.clone());
+
         let res = encrypt_small_file("./keys.db", "./keys.db.encrypt", &key1);
         if let Err(err) = res {
             error!("Cannot encrypt file: {:?}", err);
@@ -99,12 +92,7 @@ impl IoAsyncHandler {
 
         app.toggle_input_mode();
 
-        let password = app.get_input_buffer().as_bytes();
         self.password = app.get_input_buffer().clone().to_string();
-
-        // while !app.is {
-        //     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-        // }
 
         //TODO: get the configuration
         //TODO: make a promnp to ask for the password
@@ -112,19 +100,7 @@ impl IoAsyncHandler {
         if std::path::Path::exists(Path::new("./keys.db.encrypt")) {
             info!("🔒 File encrypted");
 
-            // let password = b"password";
-            // let password = app.get_input_buffer().as_bytes();
-            // self.password = app.get_input_buffer().clone().to_string();
-
-            // debug!("password: {:?}", app.get_input_buffer());
-            // debug!("self.password: {:?}", self.password);
-
-            let salt = b"salt";
-            // number of iterations
-            let n = 4096;
-
-            let mut key1 = [0u8; 32];
-            pbkdf2_hmac::<Sha256>(password, salt, n, &mut key1);
+            let key1 = gen_key_from_password(self.password.clone());
 
             let res = decrypt_small_file("./keys.db.encrypt", "./keys.db", &key1);
             if let Err(err) = res {
