@@ -54,7 +54,7 @@ pub fn decrypt_small_file(
 //
 /// Generate a key from a password
 /// ```
-/// use crate::crypto::utils::gen_key_from_password;
+/// use rust_password_manager::crypto::utils::gen_key_from_password;
 ///
 /// let password = "password".to_string();
 /// let key = gen_key_from_password(password);
