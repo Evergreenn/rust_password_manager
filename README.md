@@ -1,8 +1,10 @@
 [![Rust](https://github.com/Evergreenn/rust_password_manager/actions/workflows/rust.yml/badge.svg?branch=master)](https://github.com/Evergreenn/rust_password_manager/actions/workflows/rust.yml)
 
-# Rust Password Manager (TUI App)
+# Rustylock (TUI App)
 
 This is a terminal user interface (TUI) password manager written in Rust. It allows users to securely store and manage their passwords using an interactive command-line interface. The project utilizes various Rust libraries and dependencies to provide a reliable and efficient password management solution.
+
+It stands for Rust Utility Secure Tool for Your LOgin Credentials
 
 ## Features
 

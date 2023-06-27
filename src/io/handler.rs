@@ -6,6 +6,7 @@ use log::{error, info};
 
 use super::IoEvent;
 use crate::app::App;
+use crate::config;
 use crate::crypto::utils::{decrypt_small_file, encrypt_small_file, gen_key_from_password};
 use crate::models::key::Key;
 
@@ -96,6 +97,10 @@ impl IoAsyncHandler {
         self.password = <String>::clone(&app.get_input_buffer().to_string());
 
         //TODO: get the configuration
+
+        let loaded = config::Config::load_config(&app.config);
+
+        info!("⚙️ Config loaded : {:#?}", loaded.color_scheme);
 
         if std::path::Path::exists(Path::new("./keys.db.encrypt")) {
             info!("🔒 File encrypted");

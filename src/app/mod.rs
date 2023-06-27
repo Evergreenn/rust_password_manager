@@ -6,6 +6,7 @@ use self::actions::normal_actions::Actions;
 use self::state::{AppData, AppState};
 use crate::app::actions::editing_actions::EditingAction;
 use crate::app::actions::normal_actions::Action;
+use crate::config::Config;
 use crate::inputs::key::Key;
 use crate::io::IoEvent;
 
@@ -36,6 +37,7 @@ pub struct App {
     input_buffer: String,
     pub data: AppData,
     pub clipboard: Clipboard,
+    pub config: Config,
 }
 
 impl App {
@@ -55,6 +57,7 @@ impl App {
         let input_mode = InputMode::Normal;
         let input_buffer = String::new();
         let clipboard = Clipboard::new().unwrap();
+        let config = Config::default();
 
         Self {
             io_tx,
@@ -66,6 +69,7 @@ impl App {
             input_mode,
             input_buffer,
             clipboard,
+            config,
         }
     }
 
@@ -113,7 +117,11 @@ impl App {
             }
 
             EditingAction::Validate => {
-                let key = crate::models::key::Key::new(None, self.input_buffer.clone());
+                let key = crate::models::key::Key::new(
+                    None,
+                    self.input_buffer.clone(),
+                    &self.config.password_options,
+                );
 
                 if self.state.is_initialized() {
                     self.dispatch(IoEvent::RegisterKey(key)).await;

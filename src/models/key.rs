@@ -2,6 +2,8 @@ use chrono::prelude::*;
 use passwords::PasswordGenerator;
 use uuid::Uuid;
 
+use crate::config::PasswordOptions;
+
 #[derive(Debug, Clone)]
 pub struct Key {
     id: Uuid,
@@ -14,17 +16,17 @@ pub struct Key {
 }
 
 impl Key {
-    pub fn new(id: Option<Uuid>, name: String) -> Self {
+    pub fn new(id: Option<Uuid>, name: String, options: &PasswordOptions) -> Self {
         let id = id.unwrap_or(Uuid::new_v4());
         let now = Utc::now();
         let pg = PasswordGenerator::new()
-            .length(32)
-            .numbers(true)
-            .lowercase_letters(true)
-            .uppercase_letters(true)
-            .symbols(true)
-            .spaces(false)
-            .exclude_similar_characters(true)
+            .length(options.length as usize)
+            .numbers(options.use_numbers)
+            .lowercase_letters(options.use_lowercase)
+            .uppercase_letters(options.use_uppercase)
+            .symbols(options.use_symbols)
+            .spaces(options.use_spaces)
+            .exclude_similar_characters(options.exclude_similar_characters)
             .strict(true);
         let password = pg.generate_one().unwrap();
 
