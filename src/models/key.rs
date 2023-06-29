@@ -111,6 +111,12 @@ impl Key {
         self.last_used_at = now;
     }
 
+    pub fn remove_from_database(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let conn = rusqlite::Connection::open("keys.db")?;
+        conn.execute("DELETE FROM keys WHERE id = ?1", rusqlite::params![self.id])?;
+        Ok(())
+    }
+
     pub fn update_in_database(&self) -> Result<(), Box<dyn std::error::Error>> {
         let conn = rusqlite::Connection::open("keys.db")?;
         conn.execute(

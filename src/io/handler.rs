@@ -32,6 +32,7 @@ impl IoAsyncHandler {
             IoEvent::RegisterKey(key) => self.register_key(key).await,
             IoEvent::Refresh => self.refresh_application_state().await,
             IoEvent::Close => self.close_application().await,
+            IoEvent::Delete(key) => self.delete_key(key).await,
         };
 
         if let Err(err) = result {
@@ -45,6 +46,18 @@ impl IoAsyncHandler {
     async fn refresh_application_state(&mut self) -> Result<()> {
         info!("🔄 Refresh application state");
         let mut app = self.app.lock().await;
+        app.data.load_key_list();
+        Ok(())
+    }
+
+    async fn delete_key(&mut self, key: Key) -> Result<()> {
+        let mut app = self.app.lock().await;
+        let deleted = key.remove_from_database();
+        if let Err(err) = deleted {
+            error!("Cannot delete key: {:?}", err);
+        } else {
+            info!("🗑 Key deleted");
+        }
         app.data.load_key_list();
         Ok(())
     }

@@ -13,18 +13,20 @@ pub enum Action {
     MoveDown,
     CreateKey,
     CopyPassword,
+    DeleteKey,
 }
 
 impl Action {
     /// All available actions
     pub fn iterator() -> Iter<'static, Action> {
-        static ACTIONS: [Action; 6] = [
+        static ACTIONS: [Action; 7] = [
             Action::Quit,
             Action::Help,
             Action::MoveUp,
             Action::MoveDown,
             Action::CreateKey,
             Action::CopyPassword,
+            Action::DeleteKey,
         ];
         ACTIONS.iter()
     }
@@ -37,6 +39,7 @@ impl Action {
             Action::MoveDown => &[Key::Char('j')],
             Action::CreateKey => &[Key::Char('c')],
             Action::CopyPassword => &[Key::Char('y')],
+            Action::DeleteKey => &[Key::Char('d')],
             Action::Help => &[Key::Char('?')],
         }
     }
@@ -52,6 +55,7 @@ impl Display for Action {
             Action::MoveDown => "Move down",
             Action::CopyPassword => "Copy password",
             Action::CreateKey => "Create a new key",
+            Action::DeleteKey => "Delete a key",
         };
         write!(f, "{str}")
     }

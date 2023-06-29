@@ -15,6 +15,7 @@ pub enum AppState {
         counter_tick: u64,
         show_help: bool,
         show_creation_popup: bool,
+        waiting: bool,
     },
 }
 
@@ -27,6 +28,7 @@ impl AppState {
             counter_tick,
             show_help: false,
             show_creation_popup: false,
+            waiting: false,
         }
     }
 
@@ -53,6 +55,12 @@ impl AppState {
     pub fn toggle_help(&mut self) {
         if let Self::Initialized { show_help, .. } = self {
             *show_help = !*show_help;
+        }
+    }
+
+    pub fn toggle_waiting(&mut self) {
+        if let Self::Initialized { waiting, .. } = self {
+            *waiting = !*waiting;
         }
     }
 

@@ -117,13 +117,12 @@ impl App {
             }
 
             EditingAction::Validate => {
-                let key = crate::models::key::Key::new(
-                    None,
-                    self.input_buffer.clone(),
-                    &self.config.password_options,
-                );
-
                 if self.state.is_initialized() {
+                    let key = crate::models::key::Key::new(
+                        None,
+                        self.input_buffer.clone(),
+                        &self.config.password_options,
+                    );
                     self.dispatch(IoEvent::RegisterKey(key)).await;
                     self.dispatch(IoEvent::Refresh).await;
                     self.toggle_input_mode();
@@ -169,6 +168,16 @@ impl App {
             Action::CreateKey => {
                 self.toggle_input_mode();
                 self.state.toggle_creation_popup();
+                AppReturn::Continue
+            }
+            Action::DeleteKey => {
+                let key = self.data.keys.state.selected();
+                if let Some(key) = key {
+                    if let Some(item) = self.data.keys.items.get(key) {
+                        self.dispatch(IoEvent::Delete(item.clone())).await;
+                        self.dispatch(IoEvent::Refresh).await;
+                    }
+                }
                 AppReturn::Continue
             }
             Action::CopyPassword => {
@@ -228,6 +237,7 @@ impl App {
             Action::MoveDown,
             Action::CreateKey,
             Action::CopyPassword,
+            Action::DeleteKey,
         ]
         .into();
         self.editing_actions = vec![
