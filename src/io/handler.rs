@@ -121,8 +121,8 @@ impl IoAsyncHandler {
             let key1 = gen_key_from_password(self.password.clone());
 
             let res = decrypt_small_file("./keys.db.encrypt", "./keys.db", &key1);
-            if let Err(err) = res {
-                error!("Cannot decrypt file: {:?}", err);
+            if let Err(_err) = res {
+                eprintln!("Wrong password, please try again");
 
                 app.toggle_input_mode();
             } else {

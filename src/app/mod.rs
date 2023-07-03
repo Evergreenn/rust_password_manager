@@ -24,6 +24,7 @@ pub enum AppReturn {
 enum InputMode {
     Normal,
     Editing,
+    Confirmation,
 }
 
 /// The main application, containing the state
@@ -95,6 +96,24 @@ impl App {
                 Some(action) => self.do_editing_action(*action, key).await,
                 None => self.do_editing_action(EditingAction::WriteChar, key).await,
             },
+            InputMode::Confirmation => match self.confirmation_actions.find(key) {
+                Some(action) => self.do_confirmation_action(*action).await,
+                None => {
+                    // warn!("No action accociated to {}", key);
+                    AppReturn::Continue
+                }
+            },
+        }
+    }
+
+    async fn do_confirmation_action(&mut self, action: ConfirmationAction) -> AppReturn {
+        match action {
+            ConfirmationAction::Quit => {
+                self.dispatch(IoEvent::Close).await;
+                AppReturn::Exit
+            }
+            ConfirmationAction::Dismiss => AppReturn::Continue,
+            ConfirmationAction::Validate => AppReturn::Continue,
         }
     }
 
