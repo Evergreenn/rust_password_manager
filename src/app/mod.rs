@@ -1,9 +1,11 @@
 use arboard::Clipboard;
 use log::{debug, error, info};
 
+use self::actions::confirmation_actions::ConfirmationActions;
 use self::actions::editing_actions::EditingActions;
 use self::actions::normal_actions::Actions;
 use self::state::{AppData, AppState};
+use crate::app::actions::confirmation_actions::ConfirmationAction;
 use crate::app::actions::editing_actions::EditingAction;
 use crate::app::actions::normal_actions::Action;
 use crate::config::Config;
@@ -32,6 +34,7 @@ pub struct App {
     io_tx: tokio::sync::mpsc::Sender<IoEvent>,
     actions: Actions,
     editing_actions: EditingActions,
+    confirmation_actions: ConfirmationActions,
     is_loading: bool,
     state: AppState,
     input_mode: InputMode,
@@ -52,6 +55,8 @@ impl App {
             EditingAction::WriteChar,
         ]
         .into();
+        let confirmation_actions =
+            vec![ConfirmationAction::Cancel, ConfirmationAction::Confirm].into();
         let is_loading = false;
         let state = AppState::default();
         let data = AppData::default();
@@ -64,6 +69,7 @@ impl App {
             io_tx,
             actions,
             editing_actions,
+            confirmation_actions,
             is_loading,
             state,
             data,
@@ -108,12 +114,8 @@ impl App {
 
     async fn do_confirmation_action(&mut self, action: ConfirmationAction) -> AppReturn {
         match action {
-            ConfirmationAction::Quit => {
-                self.dispatch(IoEvent::Close).await;
-                AppReturn::Exit
-            }
-            ConfirmationAction::Dismiss => AppReturn::Continue,
-            ConfirmationAction::Validate => AppReturn::Continue,
+            ConfirmationAction::Cancel => AppReturn::Continue,
+            ConfirmationAction::Confirm => AppReturn::Continue,
         }
     }
 
@@ -193,6 +195,7 @@ impl App {
                 let key = self.data.keys.state.selected();
                 if let Some(key) = key {
                     if let Some(item) = self.data.keys.items.get(key) {
+                        self.state.toggle_confirmation_popup();
                         self.dispatch(IoEvent::Delete(item.clone())).await;
                         self.dispatch(IoEvent::Refresh).await;
                     }
@@ -278,6 +281,7 @@ impl App {
         self.input_mode = match self.input_mode {
             InputMode::Normal => InputMode::Editing,
             InputMode::Editing => InputMode::Normal,
+            InputMode::Confirmation => InputMode::Normal,
         }
     }
 }

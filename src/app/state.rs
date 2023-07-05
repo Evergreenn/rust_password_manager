@@ -15,6 +15,7 @@ pub enum AppState {
         counter_tick: u64,
         show_help: bool,
         show_creation_popup: bool,
+        show_confirmation_popup: bool,
         waiting: bool,
     },
 }
@@ -28,10 +29,10 @@ impl AppState {
             counter_tick,
             show_help: false,
             show_creation_popup: false,
+            show_confirmation_popup: false,
             waiting: false,
         }
     }
-
     // pub fn is_in_initialization(&self) -> bool {
     //     if let Self::Initialization { .. } = self {
     //         true
@@ -52,6 +53,15 @@ impl AppState {
     //     *self = Self::Initialization { password };
     // }
 
+    pub fn toggle_confirmation_popup(&mut self) {
+        if let Self::Initialized {
+            show_confirmation_popup,
+            ..
+        } = self
+        {
+            *show_confirmation_popup = !*show_confirmation_popup;
+        }
+    }
     pub fn toggle_help(&mut self) {
         if let Self::Initialized { show_help, .. } = self {
             *show_help = !*show_help;
