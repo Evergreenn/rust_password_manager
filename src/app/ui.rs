@@ -95,6 +95,31 @@ where
 
         rect.set_cursor(area.x + app.input_buffer.len() as u16 + 1, area.y + 2)
     }
+
+    if app.state.is_delete_popup() {
+        let input = draw_delete_form(app);
+        let area = centered_rect(60, 15, size);
+        rect.render_widget(Clear, area); //this clears out the background
+        rect.render_widget(input, area);
+    }
+}
+
+fn draw_delete_form<'a>(app: &mut App) -> Paragraph<'a> {
+    let text = vec![
+        Line::from(Span::raw(
+            "Are you sure you want to delete this entry ? This action is irreversible",
+        )),
+        Line::from(Span::raw("")),
+        Line::from(Span::raw("Press 'Enter' to validate")),
+        Line::from(Span::raw("Press 'Esc' to cancel")),
+    ];
+    let paragraph = Paragraph::new(text)
+        .block(Block::default().borders(Borders::ALL).title("Delete").style(Style::default().fg(Color::LightRed)))
+        .style(Style::default().fg(Color::White))
+        .alignment(Alignment::Left)
+        // .wrap(Wrap);
+    ;
+    paragraph
 }
 
 fn draw_creation_helper() -> Paragraph<'static> {

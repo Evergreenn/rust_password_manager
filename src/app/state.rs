@@ -16,6 +16,7 @@ pub enum AppState {
         show_help: bool,
         show_creation_popup: bool,
         show_confirmation_popup: bool,
+        is_deletion_popup: bool,
         waiting: bool,
     },
 }
@@ -30,6 +31,7 @@ impl AppState {
             show_help: false,
             show_creation_popup: false,
             show_confirmation_popup: false,
+            is_deletion_popup: false,
             waiting: false,
         }
     }
@@ -93,6 +95,26 @@ impl AppState {
             *show_creation_popup
         } else {
             false
+        }
+    }
+
+    pub fn is_delete_popup(&self) -> bool {
+        if let Self::Initialized {
+            is_deletion_popup, ..
+        } = self
+        {
+            *is_deletion_popup
+        } else {
+            false
+        }
+    }
+
+    pub fn toggle_deletion_popup(&mut self) {
+        if let Self::Initialized {
+            is_deletion_popup, ..
+        } = self
+        {
+            *is_deletion_popup = !*is_deletion_popup;
         }
     }
 

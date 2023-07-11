@@ -114,9 +114,22 @@ impl App {
 
     async fn do_confirmation_action(&mut self, action: ConfirmationAction) -> AppReturn {
         match action {
-            ConfirmationAction::Cancel => AppReturn::Continue,
-            ConfirmationAction::Confirm => AppReturn::Continue,
-        }
+            ConfirmationAction::Cancel => {}
+            ConfirmationAction::Confirm => {
+                if self.state.is_delete_popup() {
+                    let key = self.data.keys.state.selected();
+                    if let Some(key) = key {
+                        if let Some(item) = self.data.keys.items.get(key) {
+                            self.dispatch(IoEvent::Delete(item.clone())).await;
+                            self.dispatch(IoEvent::Refresh).await;
+                        }
+                    }
+                }
+            }
+        };
+
+        self.toggle_confirmation_mode();
+        AppReturn::Continue
     }
 
     /// Handle a user action in editing mode
@@ -194,10 +207,9 @@ impl App {
             Action::DeleteKey => {
                 let key = self.data.keys.state.selected();
                 if let Some(key) = key {
-                    if let Some(item) = self.data.keys.items.get(key) {
-                        self.state.toggle_confirmation_popup();
-                        self.dispatch(IoEvent::Delete(item.clone())).await;
-                        self.dispatch(IoEvent::Refresh).await;
+                    if let Some(_) = self.data.keys.items.get(key) {
+                        self.toggle_confirmation_mode();
+                        self.state.toggle_deletion_popup();
                     }
                 }
                 AppReturn::Continue
@@ -277,11 +289,24 @@ impl App {
         self.is_loading = false;
     }
 
+    //TODO
     pub fn toggle_input_mode(&mut self) {
         self.input_mode = match self.input_mode {
             InputMode::Normal => InputMode::Editing,
             InputMode::Editing => InputMode::Normal,
-            InputMode::Confirmation => InputMode::Normal,
+            _ => InputMode::Normal,
+        }
+    }
+
+    pub fn toggle_confirmation_mode(&mut self) {
+        self.input_mode = match self.input_mode {
+            InputMode::Normal => InputMode::Confirmation,
+            InputMode::Editing => InputMode::Confirmation,
+            InputMode::Confirmation => {
+                self.state.toggle_confirmation_popup();
+                self.state.toggle_deletion_popup();
+                InputMode::Normal
+            }
         }
     }
 }
